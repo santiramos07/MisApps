@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PsicoQuest</title>
+<link rel="manifest" href="manifest-psicoquest.json">
+<meta name="theme-color" content="#EFA6CB">
+<link rel="apple-touch-icon" href="icons/psicoquest-icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PsicoQuest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink-950:#FFF7FB;
+  --ink-900:#FFFFFF;
+  --ink-850:#FCF1F7;
+  --ink-800:#F6E3EF;
+  --line:#F3D9E7;
+  --line-soft:#F8E9F1;
+  --teal:#EFA6CB;
+  --teal-dim:rgba(239,166,203,.22);
+  --teal-glow:rgba(239,166,203,.55);
+  --violet:#A6C6F5;
+  --violet-dim:rgba(166,198,245,.24);
+  --violet-glow:rgba(166,198,245,.55);
+  --amber:#F2C583;
+  --amber-dim:rgba(242,197,131,.24);
+  --amber-glow:rgba(242,197,131,.55);
+  --amber-border:rgba(242,197,131,.55);
+  --danger:#E56F8C;
+  --danger-dim:rgba(229,111,140,.10);
+  --danger-border:rgba(229,111,140,.32);
+  --text-hi:#4A3A52;
+  --text-mid:#8D7F9A;
+  --text-low:#C4B8CE;
+  --hud-bg:rgba(255,255,255,.82);
+  --glow-a:rgba(239,166,203,.20);
+  --glow-b:rgba(166,198,245,.20);
+  --xp-grad-1:var(--teal);
+  --xp-grad-2:#F8C9DE;
+  --sub4:#8FCB9E;
+  --sub4-dim:rgba(143,203,158,.22);
+  --sub5:#F0A19B;
+  --sub5-dim:rgba(240,161,155,.22);
+  --sub6:#C6A6E8;
+  --sub6-dim:rgba(198,166,232,.22);
+  --sub7:#8FC9CE;
+  --sub7-dim:rgba(143,201,206,.22);
+  --sub8:#E8C46A;
+  --sub8-dim:rgba(232,196,106,.24);
+  --cs:light;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono','Courier New',monospace;
+  --font-hand:'Caveat',cursive;
+  --radius:14px;
+}
+:root[data-theme="dark"]{
+  --ink-950:#080C16;
+  --ink-900:#0F1626;
+  --ink-850:#141D33;
+  --ink-800:#1B2740;
+  --line:#263252;
+  --line-soft:#1D2842;
+  --teal:#3ED9C5;
+  --teal-dim:rgba(62,217,197,.14);
+  --teal-glow:rgba(62,217,197,.5);
+  --violet:#9B8CFF;
+  --violet-dim:rgba(155,140,255,.14);
+  --violet-glow:rgba(155,140,255,.5);
+  --amber:#F0B429;
+  --amber-dim:rgba(240,180,41,.14);
+  --amber-glow:rgba(240,180,41,.6);
+  --amber-border:rgba(240,180,41,.35);
+  --danger:#FF6E6E;
+  --danger-dim:rgba(255,110,110,.12);
+  --danger-border:rgba(255,110,110,.25);
+  --text-hi:#EDF2FB;
+  --text-mid:#93A0BD;
+  --text-low:#57638A;
+  --hud-bg:rgba(10,14,26,.86);
+  --glow-a:rgba(62,217,197,.07);
+  --glow-b:rgba(155,140,255,.07);
+  --xp-grad-1:var(--teal);
+  --xp-grad-2:#5FEBD8;
+  --sub4:#4ADE80;
+  --sub4-dim:rgba(74,222,128,.14);
+  --sub5:#FF8A80;
+  --sub5-dim:rgba(255,138,128,.14);
+  --sub6:#C792EA;
+  --sub6-dim:rgba(199,146,234,.14);
+  --sub7:#4DD0E1;
+  --sub7-dim:rgba(77,208,225,.14);
+  --sub8:#FFB74D;
+  --sub8-dim:rgba(255,183,77,.14);
+  --cs:dark;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(circle at 15% 0%, var(--glow-a), transparent 45%),
+    radial-gradient(circle at 85% 15%, var(--glow-b), transparent 45%),
+    var(--ink-950);
+  color:var(--text-hi);
+  font-family:var(--font-body);
+  min-height:100vh;
+  padding-bottom:60px;
+  transition:background-color .3s ease, color .3s ease;
+}
+::selection{background:var(--teal-dim);color:var(--text-hi);}
+button{font-family:inherit;cursor:pointer;}
+input,textarea{font-family:inherit;}
+
+/* ---------- background synapse net ---------- */
+.synapse-net{position:fixed;inset:0;z-index:0;opacity:.35;pointer-events:none;}
+
+/* ---------- HUD ---------- */
+.hud{
+  position:sticky;top:0;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding:14px 28px;
+  background:var(--hud-bg);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+}
+.hud-brand{display:flex;align-items:center;gap:10px;margin-right:auto;}
+.hud-brand .mark{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,var(--teal),var(--violet));
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.hud-brand .brand-text{font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:.2px;}
+.hud-brand .brand-text small{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.5px;color:var(--text-mid);font-weight:500;text-transform:uppercase;}
+
+.hud-left{display:flex;align-items:center;gap:14px;}
+.avatar-badge{
+  width:52px;height:52px;border-radius:50%;
+  background:conic-gradient(var(--teal) calc(var(--lvl-pct,0)*1%), var(--ink-800) 0);
+  display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;
+}
+.avatar-badge::after{
+  content:'';position:absolute;inset:4px;border-radius:50%;background:var(--ink-900);
+}
+.avatar-badge .lvl{position:relative;font-family:var(--font-mono);font-weight:600;font-size:15px;z-index:1;}
+.xp-info{min-width:150px;}
+.xp-bar-track{width:170px;height:7px;border-radius:5px;background:var(--ink-800);overflow:hidden;border:1px solid var(--line);}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--xp-grad-1),var(--xp-grad-2));transition:width .5s ease;}
+.xp-text{font-family:var(--font-mono);font-size:10.5px;color:var(--text-mid);margin-top:4px;letter-spacing:.3px;}
+
+.hud-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.streak-chip{
+  display:flex;align-items:center;gap:6px;
+  background:var(--amber-dim);border:1px solid var(--amber-border);
+  padding:7px 12px;border-radius:100px;font-family:var(--font-mono);font-size:12.5px;font-weight:600;color:var(--amber);
+}
+.timer-chip{
+  display:flex;align-items:center;gap:10px;
+  background:var(--ink-850);border:1px solid var(--line);
+  padding:6px 8px 6px 14px;border-radius:100px;
+}
+.timer-display{font-family:var(--font-mono);font-size:13.5px;letter-spacing:.5px;color:var(--text-hi);min-width:62px;}
+.timer-chip button{
+  border:none;border-radius:100px;padding:7px 14px;font-size:12px;font-weight:600;
+  background:var(--teal);color:#04231F;
+}
+.timer-chip button.active{background:var(--danger);color:#2B0808;}
+.theme-toggle{
+  display:flex;align-items:center;gap:7px;
+  background:var(--ink-850);border:1px solid var(--line);color:var(--text-hi);
+  padding:8px 14px;border-radius:100px;font-size:12.5px;font-weight:600;
+  transition:.15s;
+}
+.theme-toggle:hover{border-color:var(--text-mid);}
+
+/* ---------- tabs ---------- */
+.tabs{
+  display:flex;gap:4px;padding:14px 28px 0;position:relative;z-index:2;max-width:1180px;margin:0 auto;
+}
+.tab{
+  background:none;border:none;color:var(--text-mid);font-family:var(--font-display);font-size:15.5px;font-weight:600;
+  padding:10px 18px;border-radius:10px 10px 0 0;position:relative;top:1px;
+}
+.tab.active{color:var(--text-hi);background:var(--ink-900);border:1px solid var(--line);border-bottom:1px solid var(--ink-900);}
+.tab:not(.active):hover{color:var(--text-hi);}
+
+main{max-width:1180px;margin:0 auto;padding:22px 28px 40px;position:relative;z-index:2;}
+.panel{
+  background:var(--ink-900);border:1px solid var(--line);border-radius:0 var(--radius) var(--radius) var(--radius);
+  padding:24px;
+}
+.hidden{display:none !important;}
+
+/* ---------- subject pills ---------- */
+.subject-pills{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.subject-pill{
+  border:1px solid var(--line);background:var(--ink-850);color:var(--text-mid);
+  padding:10px 16px;border-radius:11px;font-size:13.5px;font-weight:600;
+  display:flex;align-items:center;gap:9px;transition:.15s;
+}
+.subject-pill .dot{width:9px;height:9px;border-radius:50%;background:var(--c);}
+.subject-pill.active{color:var(--text-hi);border-color:var(--c);background:var(--cd);}
+.subject-pill:hover{color:var(--text-hi);}
+.subject-pill .code{font-family:var(--font-mono);font-size:10.5px;opacity:.7;}
+.subject-pill .pill-edit{
+  opacity:.5;font-size:12px;line-height:1;padding:3px 4px;border-radius:6px;transition:.15s;
+}
+.subject-pill .pill-edit:hover{opacity:1;background:rgba(0,0,0,.08);}
+.subject-pill .pill-delete{
+  opacity:.5;font-size:13px;line-height:1;padding:3px 5px;border-radius:6px;transition:.15s;color:var(--danger);
+}
+.subject-pill .pill-delete:hover{opacity:1;background:var(--danger-dim);}
+.subject-pill .pill-edit-input{
+  font-family:var(--font-body);font-size:13.5px;font-weight:600;
+  border:none;border-bottom:1.5px solid var(--c,var(--text-mid));
+  background:transparent;color:var(--text-hi);outline:none;width:min(220px,42vw);padding:0 1px;
+}
+.subject-pill.add-pill{border-style:dashed;color:var(--text-mid);background:transparent;}
+.subject-pill.add-pill:hover{color:var(--text-hi);border-color:var(--text-mid);background:var(--ink-850);}
+.subject-pill.add-pill .plus{font-family:var(--font-mono);font-size:15px;}
+
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;gap:10px;flex-wrap:wrap;}
+.section-head h2{font-family:var(--font-display);font-size:21px;margin:0;font-weight:700;}
+.section-head .sub{font-family:var(--font-mono);font-size:11px;color:var(--text-mid);margin-top:3px;}
+
+.btn-add{
+  border:1px dashed var(--line);background:transparent;color:var(--text-mid);
+  padding:10px 16px;border-radius:11px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;
+  transition:.15s;
+}
+.btn-add:hover{color:var(--text-hi);border-color:var(--text-mid);background:var(--ink-850);}
+.btn-add .plus{font-family:var(--font-mono);font-size:15px;}
+
+.empty-state{
+  text-align:center;padding:50px 20px;color:var(--text-low);font-size:13.5px;border:1px dashed var(--line);border-radius:12px;
+}
+.empty-state .glyph{font-size:26px;display:block;margin-bottom:10px;opacity:.6;}
+
+/* ---------- PEC index cards ---------- */
+.pec-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:30px 20px;align-items:start;}
+.pec-card{
+  position:relative;border:1px solid var(--line);border-radius:14px;background:var(--ink-850);overflow:visible;
+  padding-top:20px;box-shadow:0 4px 14px -8px rgba(0,0,0,.25);
+  transform:rotate(var(--tilt,-.6deg));transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.pec-card:nth-child(even){--tilt:.6deg;}
+.pec-card:hover{transform:rotate(0deg) translateY(-3px);box-shadow:0 14px 26px -10px rgba(0,0,0,.3);}
+.pec-card.complete{border-color:var(--c,var(--teal));box-shadow:0 0 0 1.5px var(--c,var(--teal)) inset,0 4px 14px -8px rgba(0,0,0,.25);}
+.pec-pin{
+  position:absolute;top:-13px;left:50%;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;
+  background:var(--c,var(--teal));box-shadow:0 3px 6px rgba(0,0,0,.22);z-index:1;
+}
+.pec-pin::after{content:'';position:absolute;inset:5px;border-radius:50%;background:rgba(255,255,255,.3);}
+.pec-header{padding:16px 16px 4px;cursor:pointer;}
+.pec-header-top{display:flex;align-items:center;gap:8px;}
+.pec-name{
+  background:none;border:none;color:var(--c,var(--teal));font-family:var(--font-hand);font-weight:700;font-size:25px;
+  border-bottom:1px solid transparent;padding:2px 0;flex:1;min-width:80px;letter-spacing:.3px;
+}
+.pec-name:focus{outline:none;border-bottom:1px solid var(--c,var(--teal));}
+.pec-due-row{display:flex;align-items:center;gap:9px;margin:4px 0 14px;flex-wrap:wrap;}
+.pec-due-label{font-family:var(--font-mono);font-size:9.5px;color:var(--text-mid);letter-spacing:1px;text-transform:uppercase;}
+.pec-due-input{
+  background:none;border:none;border-bottom:2px solid var(--c,var(--teal));color:var(--text-hi);
+  font-family:var(--font-hand);font-weight:700;font-size:19px;padding:0 0 1px;color-scheme:var(--cs);
+}
+.pec-due-input:focus{outline:none;}
+.pec-badge-done{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.5px;color:var(--c,var(--teal));
+  background:var(--cd,var(--teal-dim));border:1px solid var(--c,var(--teal));padding:3px 8px;border-radius:100px;
+  margin-left:auto;
+}
+.pec-progress-row{display:flex;flex-direction:column;gap:6px;margin-bottom:6px;}
+.progress-blocks{display:flex;gap:3px;border:1.5px solid var(--c,var(--teal));border-radius:6px;padding:3px;background:var(--ink-900);}
+.progress-block{
+  flex:1;height:24px;min-width:12px;border-radius:3px;border:none;background:none;padding:0;position:relative;
+  border-right:1.5px solid var(--c,var(--teal));cursor:pointer;
+}
+.progress-block:last-child{border-right:none;}
+.progress-block.done{background:var(--c,var(--teal));}
+.progress-block.done::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(128deg,rgba(255,255,255,.22) 0 2px,transparent 2px 6px);
+}
+.progress-empty{font-family:var(--font-mono);font-size:10.5px;color:var(--text-low);padding:6px 2px;}
+.progress-count{font-family:var(--font-mono);font-size:10.5px;color:var(--text-mid);letter-spacing:.3px;}
+.pec-expand-hint{
+  display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-mid);
+  padding:8px 0 14px;border-top:1px dashed var(--line);margin-top:10px;
+}
+.pec-expand-hint .chev{font-size:10px;transition:transform .2s;}
+.pec-card.open .pec-expand-hint .chev{transform:rotate(90deg);}
+.icon-btn{
+  background:none;border:none;color:var(--text-low);font-size:14px;padding:5px;border-radius:6px;flex-shrink:0;
+}
+.icon-btn:hover{color:var(--danger);background:var(--danger-dim);}
+
+.pec-body{padding:0 16px 16px;display:none;}
+.pec-card.open .pec-body{display:block;}
+.ex-list{display:flex;flex-direction:column;gap:10px;margin-bottom:10px;}
+.ex-card{
+  background:var(--ink-900);border:1px solid var(--line-soft);border-radius:10px;padding:12px 14px;
+}
+.ex-card.done{opacity:.62;}
+.ex-top{display:flex;align-items:flex-start;gap:10px;}
+.ex-check{
+  width:19px;height:19px;border-radius:6px;border:1.5px solid var(--text-mid);background:none;flex-shrink:0;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;
+}
+.ex-check.checked{background:var(--c,var(--teal));border-color:var(--c,var(--teal));color:#04231F;}
+.ex-enunciado{
+  flex:1;background:none;border:none;color:var(--text-hi);font-size:13.5px;line-height:1.45;resize:none;overflow:hidden;
+  min-height:20px;padding:2px 0;
+}
+.ex-enunciado::placeholder{color:var(--text-low);}
+.ex-enunciado:focus{outline:none;}
+.ex-meta{display:flex;align-items:center;gap:10px;margin:9px 0 8px 29px;flex-wrap:wrap;}
+.ex-meta label{font-family:var(--font-mono);font-size:10px;color:var(--text-mid);letter-spacing:.4px;text-transform:uppercase;}
+.ex-meta input[type=date]{
+  background:var(--ink-850);border:1px solid var(--line);color:var(--text-hi);border-radius:7px;padding:5px 8px;font-size:12px;
+  font-family:var(--font-mono);color-scheme:var(--cs);
+}
+.ex-notes{margin-left:29px;margin-bottom:8px;}
+.ex-notes summary{font-size:12px;color:var(--text-mid);cursor:pointer;font-weight:600;list-style:none;display:flex;align-items:center;gap:6px;}
+.ex-notes summary::before{content:'▸';display:inline-block;transition:transform .15s;}
+.ex-notes[open] summary::before{transform:rotate(90deg);}
+.ex-notes textarea{
+  width:100%;margin-top:7px;background:var(--ink-850);border:1px solid var(--line);border-radius:8px;color:var(--text-hi);
+  padding:9px 10px;font-size:12.5px;resize:vertical;min-height:50px;line-height:1.4;
+}
+.ex-errores{margin-left:29px;}
+.ex-errores label{font-family:var(--font-mono);font-size:10px;color:var(--danger);letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:5px;margin-bottom:5px;}
+.ex-errores textarea{
+  width:100%;background:var(--danger-dim);border:1px solid var(--danger-border);border-radius:8px;color:var(--text-hi);
+  padding:9px 10px;font-size:12.5px;resize:vertical;min-height:40px;line-height:1.4;
+}
+.ex-errores textarea::placeholder,.ex-enunciado::placeholder{color:var(--text-low);}
+.ex-del{margin-left:auto;flex-shrink:0;}
+
+/* ---------- topics ---------- */
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
+.topic-card{
+  background:var(--ink-850);border:1px solid var(--line);border-radius:12px;padding:14px;position:relative;
+}
+.topic-card input.t-title{
+  width:100%;background:none;border:none;color:var(--text-hi);font-family:var(--font-display);font-weight:700;font-size:14.5px;
+  margin-bottom:6px;padding:0;
+}
+.topic-card input.t-title:focus{outline:none;}
+.topic-card textarea.t-note{
+  width:100%;background:none;border:none;color:var(--text-mid);font-size:12.5px;resize:none;line-height:1.4;padding:0;min-height:36px;
+}
+.topic-card textarea.t-note:focus{outline:none;}
+.topic-card .icon-btn{position:absolute;top:8px;right:8px;}
+
+/* ---------- logros tab ---------- */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:24px;}
+.stat-box{background:var(--ink-850);border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+.stat-box .val{font-family:var(--font-mono);font-size:22px;font-weight:600;color:var(--text-hi);}
+.stat-box .lbl{font-size:10.5px;color:var(--text-mid);text-transform:uppercase;letter-spacing:.6px;margin-top:3px;}
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+.ach-card{
+  border:1px solid var(--line);background:var(--ink-850);border-radius:12px;padding:14px;display:flex;gap:12px;align-items:flex-start;
+}
+.ach-card.locked{opacity:.4;filter:grayscale(1);}
+.ach-card .ico{font-size:24px;flex-shrink:0;}
+.ach-card .tt{font-family:var(--font-display);font-weight:700;font-size:13.5px;margin-bottom:2px;}
+.ach-card .dd{font-size:11.5px;color:var(--text-mid);line-height:1.4;}
+
+/* ---------- popup ---------- */
+.popup-overlay{
+  position:fixed;inset:0;background:rgba(4,6,12,.72);backdrop-filter:blur(3px);z-index:100;
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s ease;
+}
+.popup-overlay.show{opacity:1;pointer-events:all;}
+.popup-card{
+  position:relative;background:linear-gradient(160deg,var(--ink-900),var(--ink-850));
+  border-radius:20px;padding:34px 42px;text-align:center;max-width:380px;
+  transform:scale(.7) translateY(10px);opacity:0;transition:transform .4s cubic-bezier(.2,1.4,.4,1),opacity .3s ease;
+}
+.popup-overlay.show .popup-card{transform:scale(1) translateY(0);opacity:1;}
+.popup-card.tier-sub{border:1.5px solid var(--teal);box-shadow:0 0 40px -6px var(--teal-glow);}
+.popup-card.tier-logro{border:2px solid var(--amber);box-shadow:0 0 60px -4px var(--amber-glow);}
+.popup-card.tier-break{border:1.5px solid var(--violet);box-shadow:0 0 40px -6px var(--violet-glow);}
+.popup-tier-label{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600;
+}
+.tier-sub .popup-tier-label{color:var(--teal);}
+.tier-logro .popup-tier-label{color:var(--amber);}
+.tier-break .popup-tier-label{color:var(--violet);}
+.popup-icon{font-size:52px;margin-bottom:10px;display:block;}
+.popup-title{font-family:var(--font-display);font-weight:800;font-size:23px;margin-bottom:8px;}
+.popup-desc{font-size:13.5px;color:var(--text-mid);line-height:1.5;margin-bottom:14px;}
+.popup-xp{
+  display:inline-block;font-family:var(--font-mono);font-weight:600;font-size:13px;padding:6px 14px;border-radius:100px;
+}
+.tier-sub .popup-xp{background:var(--teal-dim);color:var(--teal);}
+.tier-logro .popup-xp{background:var(--amber-dim);color:var(--amber);}
+.tier-break .popup-xp{background:var(--violet-dim);color:var(--violet);}
+.popup-particle{position:absolute;border-radius:50%;pointer-events:none;}
+.popup-close-hint{margin-top:16px;font-size:10.5px;color:var(--text-low);font-family:var(--font-mono);}
+.popup-btn{
+  margin-top:14px;border:none;border-radius:100px;padding:9px 20px;font-size:12.5px;font-weight:600;
+  background:var(--violet);color:#160F33;
+}
+
+@keyframes floatUp{
+  0%{transform:translate(0,0) scale(1);opacity:1;}
+  100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0;}
+}
+
+/* ---------- student name ---------- */
+.student-name{
+  font-family:var(--font-hand);font-weight:700;font-size:20px;color:var(--text-hi);
+  line-height:1;margin-top:2px;letter-spacing:.3px;
+}
+
+/* ---------- data buttons (export/import) ---------- */
+.data-btn{
+  display:flex;align-items:center;gap:7px;
+  background:var(--ink-850);border:1px solid var(--line);color:var(--text-hi);
+  padding:8px 14px;border-radius:100px;font-size:12.5px;font-weight:600;
+  transition:.15s;
+}
+.data-btn:hover{border-color:var(--text-mid);}
+
+/* ---------- auth gate ---------- */
+body.app-locked > *:not(#authGate){display:none !important;}
+#authGate{
+  position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center;
+  background:
+    radial-gradient(circle at 15% 0%, var(--glow-a), transparent 45%),
+    radial-gradient(circle at 85% 15%, var(--glow-b), transparent 45%),
+    var(--ink-950);
+}
+#authGate.hidden{display:none !important;}
+.auth-card{
+  background:var(--ink-900); border:1px solid var(--line); border-radius:20px;
+  box-shadow:0 10px 26px -12px rgba(90,60,120,.25);
+  padding:40px 36px; max-width:340px; width:90%; text-align:center;
+}
+.auth-card .mark{
+  width:56px; height:56px; border-radius:16px; margin:0 auto 18px;
+  background:linear-gradient(135deg, var(--teal), var(--violet));
+  display:flex; align-items:center; justify-content:center; font-size:28px;
+}
+.auth-card h2{font-family:var(--font-display); font-size:21px; margin:0 0 8px; color:var(--text-hi);}
+.auth-card p{color:var(--text-mid); font-size:13.5px; line-height:1.5; margin:0 0 22px;}
+.auth-signin-btn{
+  display:flex; align-items:center; justify-content:center; gap:10px; width:100%;
+  background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 16px;
+  font-size:14px; font-weight:600; color:#3B3350; box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+.auth-signin-btn:hover{border-color:var(--text-mid);}
+.auth-signin-btn svg{width:18px; height:18px;}
+.auth-loading{color:var(--text-mid); font-family:var(--font-mono); font-size:12.5px;}
+.auth-loading.hidden, .auth-signin-btn.hidden{display:none !important;}
+.auth-denied{color:var(--danger); font-family:var(--font-mono); font-size:12px; line-height:1.5; margin-top:14px;}
+.auth-denied.hidden{display:none !important;}
+
+/* ---------- settings / ajustes ---------- */
+.settings-block{
+  border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;background:var(--ink-850);
+}
+.settings-block h3{font-family:var(--font-display);font-size:16.5px;margin:0 0 6px;font-weight:700;}
+.settings-block p{font-size:12.5px;color:var(--text-mid);line-height:1.5;margin:0 0 14px;}
+.settings-block.danger{border-color:var(--danger-border);background:var(--danger-dim);}
+.settings-block.danger h3{color:var(--danger);}
+.settings-row{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-danger{
+  border:1px solid var(--danger-border);background:transparent;color:var(--danger);
+  padding:10px 18px;border-radius:11px;font-size:13px;font-weight:700;
+  transition:.15s;
+}
+.btn-danger:hover{background:var(--danger);color:#fff;border-color:var(--danger);}
+.btn-neutral{
+  border:1px solid var(--line);background:var(--ink-900);color:var(--text-hi);
+  padding:10px 18px;border-radius:11px;font-size:13px;font-weight:700;
+  transition:.15s;
+}
+.btn-neutral:hover{border-color:var(--text-mid);}
+.settings-note{font-family:var(--font-mono);font-size:10.5px;color:var(--text-low);margin-top:20px;}
+
+/* ---------- calendar ---------- */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cal-nav{display:flex;align-items:center;gap:10px;}
+.cal-nav button{
+  border:1px solid var(--line);background:var(--ink-850);color:var(--text-hi);
+  width:32px;height:32px;border-radius:9px;font-size:14px;
+}
+.cal-nav button:hover{border-color:var(--text-mid);}
+.cal-title{font-family:var(--font-display);font-weight:700;font-size:17px;min-width:170px;text-align:center;text-transform:capitalize;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.cal-dow{font-family:var(--font-mono);font-size:10px;color:var(--text-mid);text-align:center;text-transform:uppercase;letter-spacing:.5px;padding-bottom:4px;}
+.cal-day{
+  aspect-ratio:1/1;border-radius:10px;border:1px solid var(--line);background:var(--ink-850);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-family:var(--font-mono);font-size:12px;color:var(--text-mid);position:relative;
+}
+.cal-day.empty{border:none;background:none;}
+.cal-day.today{border-color:var(--violet);box-shadow:0 0 0 1.5px var(--violet) inset;}
+.cal-day.has-activity{color:var(--text-hi);border-color:var(--teal);}
+.cal-day .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);}
+.cal-day:hover{border-color:var(--text-mid);cursor:pointer;}
+.cal-detail{
+  margin-top:18px;border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--ink-850);
+  font-size:13px;color:var(--text-mid);
+}
+.cal-detail b{color:var(--text-hi);}
+.cal-legend{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-mid);margin-top:14px;}
+
+@media(max-width:640px){
+  .hud{padding:12px 16px;}
+  main{padding:18px 14px 36px;}
+  .tabs{padding:12px 14px 0;}
+  .xp-bar-track{width:110px;}
+  .pec-list{grid-template-columns:1fr;}
+  .pec-card{transform:none !important;}
+}
+</style>
+</head>
+<body class="app-locked">
+
+<div id="authGate">
+  <div class="auth-card">
+    <div class="mark">🧠</div>
+    <h2>PsicoQuest</h2>
+    <p>Inicia sesión con tu cuenta de Google para ver y guardar tu progreso, sincronizado entre todos tus dispositivos.</p>
+    <button class="auth-signin-btn" id="authSigninBtn">
+      <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.6 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.1-5.1l-6.5-5.5c-2 1.5-4.6 2.4-7.6 2.4-5.2 0-9.6-3.3-11.2-7.9l-6.6 5.1C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.5 5.5C41.4 36 44 30.5 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+      Iniciar sesión con Google
+    </button>
+    <div class="auth-loading hidden" id="authLoading">Conectando…</div>
+    <div class="auth-denied hidden" id="authDenied">Esta cuenta de Google no tiene acceso a esta app.</div>
+  </div>
+</div>
+
+<svg class="synapse-net" id="synapseNet" xmlns="http://www.w3.org/2000/svg"></svg>
+
+<header class="hud">
+  <div class="hud-brand">
+    <div class="mark">🧠</div>
+    <div>
+      <div class="brand-text">PsicoQuest<small>Panel de estudio · Psicología</small></div>
+      <div class="student-name">Clara Ortega García</div>
+    </div>
+  </div>
+  <div class="hud-left">
+    <div class="avatar-badge" id="avatarBadge" style="--lvl-pct:0"><span class="lvl" id="lvlNum">1</span></div>
+    <div class="xp-info">
+      <div class="xp-bar-track"><div class="xp-bar-fill" id="xpFill" style="width:0%"></div></div>
+      <div class="xp-text" id="xpText">0 / 100 XP</div>
+    </div>
+  </div>
+  <div class="hud-right">
+    <button class="data-btn" id="authSignoutBtn" title="Cerrar sesión de Google">👤 <span id="authUserEmail">Cerrar sesión</span></button>
+    <button class="data-btn" id="exportBtn" title="Exportar progreso a .json">⭳ Exportar</button>
+    <button class="data-btn" id="importBtn" title="Importar progreso desde .json">⭱ Importar</button>
+    <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
+    <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌙 Modo noche</button>
+    <div class="streak-chip">🔥 <span id="streakVal">0 días</span></div>
+    <div class="timer-chip">
+      <span class="timer-display" id="timerDisplay">00:00:00</span>
+      <button id="timerToggle">▶ Iniciar sesión</button>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="pecs">PECs</button>
+  <button class="tab" data-tab="temario">Temario</button>
+  <button class="tab" data-tab="logros">Logros</button>
+  <button class="tab" data-tab="calendario">Calendario</button>
+  <button class="tab" data-tab="ajustes">Ajustes</button>
+</nav>
+
+<main>
+  <!-- PECS TAB -->
+  <section class="panel" id="tab-pecs">
+    <div class="subject-pills" id="subjectPillsPecs"></div>
+    <div class="section-head">
+      <div>
+        <h2 id="pecSubjectTitle"></h2>
+        <div class="sub" id="pecSubjectSub"></div>
+      </div>
+      <button class="btn-add" id="addPecBtn"><span class="plus">+</span> Nuevo PEC</button>
+    </div>
+    <div class="pec-list" id="pecList"></div>
+  </section>
+
+  <!-- TEMARIO TAB -->
+  <section class="panel hidden" id="tab-temario">
+    <div class="subject-pills" id="subjectPillsTemario"></div>
+    <div class="section-head">
+      <div>
+        <h2 id="temaSubjectTitle"></h2>
+        <div class="sub">Organiza los temas a medida que te lleguen los PDFs</div>
+      </div>
+      <button class="btn-add" id="addTopicBtn"><span class="plus">+</span> Nuevo tema</button>
+    </div>
+    <div class="topic-grid" id="topicGrid"></div>
+  </section>
+
+  <!-- LOGROS TAB -->
+  <section class="panel hidden" id="tab-logros">
+    <div class="section-head"><div><h2>Tu progreso</h2><div class="sub">Estadísticas y logros desbloqueados</div></div></div>
+    <div class="stat-row" id="statRow"></div>
+    <div class="ach-grid" id="achGrid"></div>
+  </section>
+
+  <!-- CALENDARIO TAB -->
+  <section class="panel hidden" id="tab-calendario">
+    <div class="section-head"><div><h2>Calendario de estudio</h2><div class="sub">Cada día que estudias queda registrado aquí</div></div></div>
+    <div class="cal-header">
+      <div class="cal-title" id="calTitle"></div>
+      <div class="cal-nav">
+        <button id="calPrev" title="Mes anterior">‹</button>
+        <button id="calToday" title="Ir a hoy">●</button>
+        <button id="calNext" title="Mes siguiente">›</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--teal);display:inline-block;"></span> Día con actividad registrada</div>
+    <div class="cal-detail" id="calDetail">Toca un día del calendario para ver el detalle.</div>
+  </section>
+
+  <!-- AJUSTES TAB -->
+  <section class="panel hidden" id="tab-ajustes">
+    <div class="section-head"><div><h2>Ajustes</h2><div class="sub">Copia de seguridad y gestión del progreso</div></div></div>
+
+    <div class="settings-block">
+      <h3>Copia de seguridad</h3>
+      <p>Exporta tu progreso a un archivo .json para guardarlo, o impórtalo para restaurarlo en otro navegador o dispositivo.</p>
+      <div class="settings-row">
+        <button class="btn-neutral" id="exportBtn2">⭳ Exportar progreso (.json)</button>
+        <button class="btn-neutral" id="importBtn2">⭱ Importar progreso (.json)</button>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h3>Reiniciar experiencia</h3>
+      <p>Pone tu XP y nivel a cero. No borra tus PECs, ejercicios, temario, logros ni tu calendario de estudio.</p>
+      <div class="settings-row">
+        <button class="btn-neutral" id="resetXpBtn">↺ Reiniciar niveles de experiencia</button>
+      </div>
+    </div>
+
+    <div class="settings-block danger">
+      <h3>⚠ Zona de peligro</h3>
+      <p>Elimina permanentemente todo tu progreso: racha, logros, PECs, ejercicios, temario y calendario de estudio. Tu XP y nivel se conservan. Esta acción no se puede deshacer.</p>
+      <div class="settings-row">
+        <button class="btn-danger" id="resetAllBtn">🗑 Eliminar todo mi progreso</button>
+      </div>
+    </div>
+
+    <div class="settings-note">PsicoQuest guarda los datos en este navegador. Exporta una copia con regularidad para no perder el progreso.</div>
+  </section>
+</main>
+
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-card" id="popupCard">
+    <span class="popup-tier-label" id="popupTier"></span>
+    <span class="popup-icon" id="popupIcon"></span>
+    <div class="popup-title" id="popupTitle"></div>
+    <div class="popup-desc" id="popupDesc"></div>
+    <div class="popup-xp" id="popupXp"></div>
+    <div id="popupExtra"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ================= CONFIG ================= */
+const DEFAULT_SUBJECTS = [
+  {id:'quant', name:'Investigación cuantitativa', code:'IC', colorIdx:0},
+  {id:'social', name:'Procesos y contextos de diferenciación social', code:'PCDS', colorIdx:1},
+  {id:'memoria', name:'Psicología de la atención y de la memoria', code:'PAM', colorIdx:2}
+];
+const COLOR_PALETTE = [
+  {var:'--teal', dim:'--teal-dim'},
+  {var:'--violet', dim:'--violet-dim'},
+  {var:'--amber', dim:'--amber-dim'},
+  {var:'--sub4', dim:'--sub4-dim'},
+  {var:'--sub5', dim:'--sub5-dim'},
+  {var:'--sub6', dim:'--sub6-dim'},
+  {var:'--sub7', dim:'--sub7-dim'},
+  {var:'--sub8', dim:'--sub8-dim'}
+];
+function subjectColor(sub){ return COLOR_PALETTE[(sub.colorIdx||0) % COLOR_PALETTE.length]; }
+const XP_PER_EXERCISE = 25;
+const XP_PER_PEC_BONUS = 100;
+const XP_PER_HOUR = 30;
+const BREAK_INTERVAL_SEC = 7200; // 2 hours
+const STORAGE_KEY = 'psicoquest-state-v1';
+
+/* ================= FIREBASE: SINCRONIZACIÓN AUTOMÁTICA =================
+   1) Ve a https://console.firebase.google.com, crea un proyecto gratis.
+   2) Activa "Authentication" -> proveedor Google.
+   3) Activa "Firestore Database" (modo producción).
+   4) Configuración del proyecto -> Tus apps -> Web (</>) -> copia el objeto
+      firebaseConfig y pégalo aquí abajo, reemplazando los valores PEGA_AQUI.
+      USA EL MISMO PROYECTO DE FIREBASE que en escritora-libros.html si
+      quieres una única cuenta para ambas apps (cambian de todos modos de
+      "colección" así que no se mezclan los datos).
+   ================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAqfNfNXczHS6E8StYAcjQ1JrFoLVBWlg8",
+  authDomain: "mis-apps-cog.firebaseapp.com",
+  projectId: "mis-apps-cog",
+  storageBucket: "mis-apps-cog.firebasestorage.app",
+  messagingSenderId: "436016018509",
+  appId: "1:436016018509:web:e7d15ae5d3d0558655d804",
+  measurementId: "G-LGC863LPMG"
+};
+const CLOUD_COLLECTION = 'psicoquest_estado';
+/* Solo estas cuentas de Google pueden entrar en la app. Cada una guarda su
+   propio progreso por separado (nadie ve el de la otra persona). */
+const ALLOWED_EMAILS = [
+  'ramossanchezsantiago2000@gmail.com',
+  'claraortega1855@gmail.com'
+];
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const fbDb = firebase.firestore();
+const fbProvider = new firebase.auth.GoogleAuthProvider();
+
+let currentUser = null;
+let cloudUnsub = null;
+let suppressNextSnapshot = false;
+let cloudSaveTimer = null;
+
+function cloudDocRef(){ return fbDb.collection(CLOUD_COLLECTION).doc(currentUser.uid); }
+
+function cloudSave(){
+  if(!currentUser) return;
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer = setTimeout(()=>{
+    suppressNextSnapshot = true;
+    cloudDocRef().set(state).catch(err=>console.error('Error guardando en la nube:', err));
+  }, 700);
+}
+
+function listenCloud(){
+  if(cloudUnsub) cloudUnsub();
+  cloudUnsub = cloudDocRef().onSnapshot(snap=>{
+    if(suppressNextSnapshot){ suppressNextSnapshot=false; return; }
+    if(snap.exists){
+      state = snap.data();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      applyTheme();
+      render();
+    }
+  }, err=>console.error('Error escuchando la nube:', err));
+}
+
+async function startAppForUser(user){
+  currentUser = user;
+  const emailEl = document.getElementById('authUserEmail');
+  if(emailEl) emailEl.textContent = (user.email || user.displayName || '').split('@')[0];
+  try{
+    const snap = await cloudDocRef().get();
+    if(snap.exists){
+      state = snap.data();
+    } else {
+      state = load();
+      await cloudDocRef().set(state);
+    }
+  }catch(err){
+    console.error('No se pudo cargar de la nube, usando copia local:', err);
+    state = load();
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  document.getElementById('authGate').classList.add('hidden');
+  document.body.classList.remove('app-locked');
+  checkDayChange();
+  calSelectedDate = todayStr();
+  applyTheme();
+  render();
+  listenCloud();
+}
+
+fbAuth.onAuthStateChanged(user=>{
+  if(user){
+    const email = (user.email||'').toLowerCase();
+    if(!ALLOWED_EMAILS.map(e=>e.toLowerCase()).includes(email)){
+      document.getElementById('authDenied').classList.remove('hidden');
+      document.getElementById('authLoading').classList.add('hidden');
+      document.getElementById('authSigninBtn').classList.remove('hidden');
+      fbAuth.signOut();
+      return;
+    }
+    document.getElementById('authDenied').classList.add('hidden');
+    startAppForUser(user);
+  } else {
+    currentUser = null;
+    if(cloudUnsub){ cloudUnsub(); cloudUnsub=null; }
+    document.body.classList.add('app-locked');
+    document.getElementById('authGate').classList.remove('hidden');
+    document.getElementById('authLoading').classList.add('hidden');
+    document.getElementById('authSigninBtn').classList.remove('hidden');
+  }
+});
+
+document.getElementById('authSigninBtn').addEventListener('click', ()=>{
+  document.getElementById('authDenied').classList.add('hidden');
+  document.getElementById('authSigninBtn').classList.add('hidden');
+  document.getElementById('authLoading').classList.remove('hidden');
+  fbAuth.signInWithPopup(fbProvider).catch(err=>{
+    console.error(err);
+    alert('No se pudo iniciar sesión: '+err.message);
+    document.getElementById('authLoading').classList.add('hidden');
+    document.getElementById('authSigninBtn').classList.remove('hidden');
+  });
+});
+
+document.getElementById('authSignoutBtn').addEventListener('click', ()=>{
+  if(confirm('¿Cerrar sesión?')) fbAuth.signOut();
+});
+/* ================================================================== */
+
+const ACHIEVEMENTS = [
+  {id:'first_exercise', ico:'🌱', title:'Primer paso', desc:'Completa tu primer ejercicio.', check:s=>countDoneExercises(s)>=1},
+  {id:'ex_10', ico:'📚', title:'Constancia', desc:'Completa 10 ejercicios en total.', check:s=>countDoneExercises(s)>=10},
+  {id:'ex_25', ico:'🎓', title:'Erudito/a', desc:'Completa 25 ejercicios en total.', check:s=>countDoneExercises(s)>=25},
+  {id:'ex_50', ico:'🏛️', title:'Archivo maestro', desc:'Completa 50 ejercicios en total.', check:s=>countDoneExercises(s)>=50},
+  {id:'first_pec', ico:'📁', title:'Expediente cerrado', desc:'Completa tu primer PEC entero.', check:s=>countDonePecs(s)>=1},
+  {id:'pecs_3', ico:'🗂️', title:'Investigador/a', desc:'Completa 3 PECs en total.', check:s=>countDonePecs(s)>=3},
+  {id:'pecs_all3', ico:'👑', title:'Triple corona', desc:'Completa al menos 1 PEC en cada asignatura.', check:s=>s.subjects.every(sub=>(s.pecs[sub.id]||[]).some(p=>p.exercises.length>0 && p.exercises.every(e=>e.done)))},
+  {id:'streak_3', ico:'🔥', title:'Racha x3', desc:'3 días seguidos de actividad.', check:s=>s.streak.count>=3},
+  {id:'streak_7', ico:'⚡', title:'Una semana entera', desc:'7 días seguidos de actividad.', check:s=>s.streak.count>=7},
+  {id:'streak_30', ico:'🌟', title:'Hábito forjado', desc:'30 días seguidos de actividad.', check:s=>s.streak.count>=30},
+];
+/* Logros de horas de estudio: de 2h en 2h hasta 250h */
+const HOUR_ACH_ICONS = ['⏱️','⏳','📖','🕰️','💡','🧠','📘','🎯','⚡','🏅','🌟','🔬','🧩','🏆','☕','🌙','🔋','📈','🧭','✨'];
+for(let h=2; h<=250; h+=2){
+  ACHIEVEMENTS.push({
+    id:`hours_${h}`,
+    ico:HOUR_ACH_ICONS[(h/2 - 1) % HOUR_ACH_ICONS.length],
+    title:`${h} horas de estudio`,
+    desc:`Acumula ${h} horas de estudio en total.`,
+    check:s=>s.studySeconds>=h*3600
+  });
+}
+
+/* ================= STATE ================= */
+function defaultState(){
+  const subjects = DEFAULT_SUBJECTS.map(s=>Object.assign({}, s));
+  const pecs={}, topics={};
+  subjects.forEach(s=>{pecs[s.id]=[];topics[s.id]=[];});
+  return {
+    xp:0, studySeconds:0, lastBreakNotified:0,
+    theme:'light',
+    streak:{count:0,lastDate:null},
+    achievements:[],
+    subjects,
+    pecs, topics,
+    activeSubjectPecs:subjects[0].id,
+    activeSubjectTemario:subjects[0].id,
+    /* calendario / seguimiento diario */
+    currentDay:todayStr(),
+    todayStudySeconds:0,
+    todayXp:0,
+    todayExercises:0,
+    todayPecs:0,
+    dailyStats:{}
+  };
+}
+let state = load();
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    const d = defaultState();
+    return Object.assign(d, parsed, {
+      pecs: Object.assign(d.pecs, parsed.pecs||{}),
+      topics: Object.assign(d.topics, parsed.topics||{}),
+      streak: Object.assign(d.streak, parsed.streak||{}),
+      dailyStats: Object.assign(d.dailyStats, parsed.dailyStats||{})
+    });
+  }catch(e){ return defaultState(); }
+}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); cloudSave(); }
+function uid(){ return Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+
+/* ================= HELPERS ================= */
+function countDoneExercises(s){
+  let n=0;
+  s.subjects.forEach(sub=>(s.pecs[sub.id]||[]).forEach(p=>p.exercises.forEach(e=>{if(e.done)n++;})));
+  return n;
+}
+function countDonePecs(s){
+  let n=0;
+  s.subjects.forEach(sub=>(s.pecs[sub.id]||[]).forEach(p=>{if(p.exercises.length>0 && p.exercises.every(e=>e.done))n++;}));
+  return n;
+}
+function xpForLevel(lvl){ return 100 + (lvl-1)*50; }
+function levelFromXp(xp){
+  let lvl=1, remaining=xp;
+  while(remaining>=xpForLevel(lvl)){ remaining-=xpForLevel(lvl); lvl++; }
+  return {level:lvl, into:remaining, need:xpForLevel(lvl)};
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function registerActivity(){
+  const today = todayStr();
+  if(state.streak.lastDate === today) return;
+  const y = new Date(); y.setDate(y.getDate()-1);
+  const yesterday = y.toISOString().slice(0,10);
+  if(state.streak.lastDate === yesterday){ state.streak.count += 1; }
+  else { state.streak.count = 1; }
+  state.streak.lastDate = today;
+}
+function addXp(n){ state.xp = Math.max(0, state.xp+n); state.todayXp = (state.todayXp||0)+n; }
+function subjectMeta(id){ return state.subjects.find(s=>s.id===id); }
+
+/* ================= ACHIEVEMENT / POPUP QUEUE ================= */
+let popupQueue = [];
+let popupBusy = false;
+
+function checkAchievements(){
+  ACHIEVEMENTS.forEach(a=>{
+    if(!state.achievements.includes(a.id) && a.check(state)){
+      state.achievements.push(a.id);
+      popupQueue.push({tier:'logro', icon:a.ico, title:a.title, desc:a.desc, xpLabel:'Logro desbloqueado'});
+    }
+  });
+}
+
+function showPopup(cfg){
+  popupQueue.push(cfg);
+  processQueue();
+}
+function processQueue(){
+  if(popupBusy || popupQueue.length===0) return;
+  popupBusy = true;
+  const cfg = popupQueue.shift();
+  const overlay = document.getElementById('popupOverlay');
+  const card = document.getElementById('popupCard');
+  card.className = 'popup-card tier-'+cfg.tier;
+  document.getElementById('popupTier').textContent = cfg.tier==='logro'?'¡Logro desbloqueado!':(cfg.tier==='break'?'Aviso de descanso':'Sublogro');
+  document.getElementById('popupIcon').textContent = cfg.icon;
+  document.getElementById('popupTitle').textContent = cfg.title;
+  document.getElementById('popupDesc').textContent = cfg.desc;
+  const xpEl = document.getElementById('popupXp');
+  const extraEl = document.getElementById('popupExtra');
+  extraEl.innerHTML='';
+  if(cfg.xp){ xpEl.textContent = '+'+cfg.xp+' XP'; xpEl.style.display='inline-block'; }
+  else if(cfg.xpLabel){ xpEl.textContent = cfg.xpLabel; xpEl.style.display='inline-block'; }
+  else { xpEl.style.display='none'; }
+
+  overlay.classList.add('show');
+  spawnParticles(card, cfg.tier);
+
+  let dismissed=false;
+  const dismiss = ()=>{
+    if(dismissed) return; dismissed=true;
+    overlay.classList.remove('show');
+    overlay.removeEventListener('click', onOverlayClick);
+    setTimeout(()=>{ popupBusy=false; processQueue(); }, 300);
+  };
+  function onOverlayClick(e){ if(e.target===overlay) dismiss(); }
+  overlay.addEventListener('click', onOverlayClick);
+
+  if(cfg.tier==='break'){
+    extraEl.innerHTML = '<button class="popup-btn" id="breakPauseBtn">Pausar sesión y descansar</button><div class="popup-close-hint">Toca fuera de la tarjeta para continuar</div>';
+    setTimeout(()=>{
+      const btn = document.getElementById('breakPauseBtn');
+      if(btn) btn.addEventListener('click', ()=>{ if(timerRunning) toggleTimer(); dismiss(); });
+    },0);
+  } else {
+    const ms = cfg.tier==='logro' ? 3400 : 2200;
+    setTimeout(dismiss, ms);
+  }
+}
+function spawnParticles(card, tier){
+  const color = tier==='logro' ? 'var(--amber)' : (tier==='break' ? 'var(--violet)' : 'var(--teal)');
+  const n = tier==='logro' ? 22 : 12;
+  for(let i=0;i<n;i++){
+    const p = document.createElement('span');
+    p.className='popup-particle';
+    const angle = (Math.PI*2*i)/n + Math.random()*0.4;
+    const dist = 90 + Math.random()*70;
+    const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist;
+    const size = 3+Math.random()*4;
+    p.style.cssText = `left:50%;top:38%;width:${size}px;height:${size}px;background:${color};--dx:${dx}px;--dy:${dy}px;animation:floatUp ${0.7+Math.random()*0.5}s ease-out forwards;`;
+    card.appendChild(p);
+    setTimeout(()=>p.remove(), 1300);
+  }
+}
+
+/* ================= TIMER ================= */
+let timerRunning=false, sessionStartMs=null, timerInterval=null;
+function fmtTime(sec){
+  const h=String(Math.floor(sec/3600)).padStart(2,'0');
+  const m=String(Math.floor((sec%3600)/60)).padStart(2,'0');
+  const s=String(Math.floor(sec%60)).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+function toggleTimer(){
+  checkDayChange();
+  const btn = document.getElementById('timerToggle');
+  if(!timerRunning){
+    timerRunning=true; sessionStartMs=Date.now();
+    btn.textContent='⏸ Pausar sesión'; btn.classList.add('active');
+    timerInterval = setInterval(tickTimer, 1000);
+    registerActivity(); render();
+  } else {
+    timerRunning=false;
+    clearInterval(timerInterval);
+    btn.textContent='▶ Iniciar sesión'; btn.classList.remove('active');
+    commitSessionTime();
+  }
+  save();
+}
+function tickTimer(){
+  checkDayChange();
+  if(!timerRunning) return;
+  const elapsed = Math.floor((Date.now()-sessionStartMs)/1000);
+  document.getElementById('timerDisplay').textContent = fmtTime((state.todayStudySeconds||0) + elapsed);
+  const projected = state.studySeconds + elapsed;
+  if(projected - state.lastBreakNotified >= BREAK_INTERVAL_SEC){
+    state.lastBreakNotified += BREAK_INTERVAL_SEC;
+    showPopup({tier:'break', icon:'☕', title:'¡Llevas 2h estudiando!', desc:'Buen ritmo. Considera parar 10-15 minutos para descansar la mente antes de seguir.'});
+  }
+}
+/* Al pausar (o al perder foco) se acumula el tiempo, pero el contador
+   sigue mostrando el total de hoy en vez de volver a 00:00:00 */
+function commitSessionTime(){
+  if(sessionStartMs==null) return;
+  const elapsed = Math.floor((Date.now()-sessionStartMs)/1000);
+  if(elapsed>0){
+    state.studySeconds += elapsed;
+    state.todayStudySeconds = (state.todayStudySeconds||0) + elapsed;
+    const gained = Math.round((elapsed/3600)*XP_PER_HOUR);
+    if(gained>0) addXp(gained);
+    checkAchievements();
+  }
+  sessionStartMs=null;
+  document.getElementById('timerDisplay').textContent = fmtTime(state.todayStudySeconds||0);
+  save(); render();
+}
+
+/* ================= CAMBIO DE DÍA / CALENDARIO ================= */
+function saveDayToCalendar(dateStr){
+  const prev = state.dailyStats[dateStr] || {studySeconds:0, xp:0, exercises:0, pecs:0};
+  state.dailyStats[dateStr] = {
+    studySeconds: prev.studySeconds + (state.todayStudySeconds||0),
+    xp: prev.xp + (state.todayXp||0),
+    exercises: prev.exercises + (state.todayExercises||0),
+    pecs: prev.pecs + (state.todayPecs||0)
+  };
+}
+// Se ejecuta al cargar la página y periódicamente: si el día del calendario del
+// ordenador ha cambiado, guarda lo hecho ese día y reinicia el contador diario,
+// tanto si el cronómetro estaba activo como si estaba en pausa.
+function checkDayChange(){
+  const today = todayStr();
+  if(!state.currentDay){ state.currentDay = today; return; }
+  if(state.currentDay === today) return;
+
+  if(timerRunning && sessionStartMs!=null){
+    // cerramos la sesión abierta dentro del día anterior antes de archivarlo
+    const elapsed = Math.floor((Date.now()-sessionStartMs)/1000);
+    if(elapsed>0){
+      state.studySeconds += elapsed;
+      state.todayStudySeconds = (state.todayStudySeconds||0) + elapsed;
+      const gained = Math.round((elapsed/3600)*XP_PER_HOUR);
+      if(gained>0) addXp(gained);
+    }
+  }
+
+  saveDayToCalendar(state.currentDay);
+
+  state.currentDay = today;
+  state.todayStudySeconds = 0;
+  state.todayXp = 0;
+  state.todayExercises = 0;
+  state.todayPecs = 0;
+
+  if(timerRunning){
+    sessionStartMs = Date.now();
+    document.getElementById('timerDisplay').textContent = '00:00:00';
+  } else {
+    document.getElementById('timerDisplay').textContent = '00:00:00';
+  }
+  save();
+  render();
+}
+setInterval(checkDayChange, 20000);
+
+/* ================= RENDER: HUD ================= */
+function renderHud(){
+  const {level, into, need} = levelFromXp(state.xp);
+  document.getElementById('lvlNum').textContent = level;
+  document.getElementById('avatarBadge').style.setProperty('--lvl-pct', Math.min(100, Math.round((into/need)*100)));
+  document.getElementById('xpFill').style.width = Math.min(100,(into/need)*100)+'%';
+  document.getElementById('xpText').textContent = `${into} / ${need} XP · Nivel ${level}`;
+  document.getElementById('streakVal').textContent = `${state.streak.count} día${state.streak.count===1?'':'s'}`;
+}
+
+/* ================= RENDER: PILLS ================= */
+function renderPills(containerId, activeKey, onSelect){
+  const el = document.getElementById(containerId);
+  el.innerHTML = state.subjects.map(s=>{
+    const col = subjectColor(s);
+    return `
+    <button class="subject-pill ${state[activeKey]===s.id?'active':''}" data-sid="${s.id}" style="--c:var(${col.var});--cd:var(${col.dim})">
+      <span class="dot"></span><span class="pill-name">${escapeHtml(s.name)}</span><span class="code">${escapeHtml(s.code||'')}</span>
+      <span class="pill-edit" data-sid="${s.id}" title="Renombrar asignatura">✎</span>
+      <span class="pill-delete" data-sid="${s.id}" title="Eliminar asignatura">✕</span>
+    </button>`;
+  }).join('') + `<button class="subject-pill add-pill" type="button" id="${containerId}_add"><span class="plus">+</span> Añadir asignatura</button>`;
+
+  el.querySelectorAll('.subject-pill[data-sid]').forEach(btn=>{
+    btn.addEventListener('click',(e)=>{
+      if(e.target.closest('.pill-edit')) return;
+      state[activeKey]=btn.dataset.sid; save(); onSelect();
+    });
+  });
+  el.querySelectorAll('.pill-edit').forEach(editBtn=>{
+    editBtn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      startPillEdit(editBtn.dataset.sid, editBtn.closest('.subject-pill'));
+    });
+  });
+  el.querySelectorAll('.pill-delete').forEach(delBtn=>{
+    delBtn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      deleteSubject(delBtn.dataset.sid);
+    });
+  });
+  const addBtn = document.getElementById(containerId+'_add');
+  if(addBtn) addBtn.addEventListener('click', addSubject);
+}
+
+function deleteSubject(sid){
+  const sub = subjectMeta(sid);
+  if(!sub) return;
+  if(state.subjects.length<=1){
+    alert('No puedes eliminar la última asignatura: tiene que quedar al menos una.');
+    return;
+  }
+  if(!confirm(`¿Eliminar la asignatura "${sub.name}"? Se borrarán también sus PECs, ejercicios y temario asociados. Esta acción no se puede deshacer.`)) return;
+
+  state.subjects = state.subjects.filter(s=>s.id!==sid);
+  delete state.pecs[sid];
+  delete state.topics[sid];
+
+  if(state.activeSubjectPecs===sid) state.activeSubjectPecs = state.subjects[0].id;
+  if(state.activeSubjectTemario===sid) state.activeSubjectTemario = state.subjects[0].id;
+
+  save();
+  render();
+  showPopup({tier:'sub', icon:'🗑', title:'Asignatura eliminada', desc:`Se ha eliminado "${sub.name}" y su contenido asociado.`});
+}
+
+function startPillEdit(sid, pillEl){
+  const sub = subjectMeta(sid);
+  if(!sub || !pillEl) return;
+  const nameSpan = pillEl.querySelector('.pill-name');
+  if(!nameSpan) return;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'pill-edit-input';
+  input.value = sub.name;
+  input.maxLength = 80;
+  nameSpan.replaceWith(input);
+  input.focus();
+  input.select();
+  let done = false;
+  const commit = ()=>{
+    if(done) return;
+    done = true;
+    const v = input.value.trim();
+    if(v) sub.name = v;
+    save();
+    render();
+  };
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); commit(); }
+    else if(e.key==='Escape'){ done = true; render(); }
+  });
+  input.addEventListener('blur', commit);
+  input.addEventListener('click', e=>e.stopPropagation());
+}
+
+function addSubject(){
+  const name = prompt('Nombre de la nueva asignatura:');
+  if(!name || !name.trim()) return;
+  const trimmed = name.trim();
+  const code = (trimmed.match(/[A-Za-zÁÉÍÓÚÑáéíóúñ]+/g)||[])
+    .map(w=>w[0]).join('').toUpperCase().slice(0,4) || 'ASG';
+  const id = 'sub_'+uid();
+  state.subjects.push({id, name:trimmed, code, colorIdx: state.subjects.length});
+  state.pecs[id] = [];
+  state.topics[id] = [];
+  state.activeSubjectPecs = id;
+  state.activeSubjectTemario = id;
+  save();
+  render();
+}
+
+/* ================= RENDER: PECS ================= */
+function autoGrow(ta){ ta.style.height='auto'; ta.style.height=(ta.scrollHeight)+'px'; }
+
+function renderPecs(){
+  renderPills('subjectPillsPecs','activeSubjectPecs', renderPecs);
+  const sub = subjectMeta(state.activeSubjectPecs);
+  document.getElementById('pecSubjectTitle').textContent = sub.name;
+  document.getElementById('pecSubjectSub').textContent = `${sub.code} · expedientes PEC`;
+  const list = state.pecs[sub.id];
+  const wrap = document.getElementById('pecList');
+
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-state"><span class="glyph">🗂️</span>Aún no has añadido ningún PEC para esta asignatura.<br>Usa "+ Nuevo PEC" para empezar.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = list.map(pec=>{
+    const total = pec.exercises.length;
+    const doneCount = pec.exercises.filter(e=>e.done).length;
+    const done = total>0 && doneCount===total;
+    const blocks = pec.exercises.map(e=>
+      `<button class="progress-block ${e.done?'done':''}" data-role="toggleblock" data-exid="${e.id}" title="${escapeAttr(e.enunciado||'Ejercicio')}"></button>`
+    ).join('');
+    return `
+    <div class="pec-card ${pec.open?'open':''} ${done?'complete':''}" data-pecid="${pec.id}" style="--c:var(${sub.var});--cd:var(${sub.dimVar})">
+      <div class="pec-pin"></div>
+      <div class="pec-header" data-role="toggle">
+        <div class="pec-header-top">
+          <input class="pec-name" data-role="pecname" value="${escapeAttr(pec.name)}" placeholder="Nombre del PEC"/>
+          <button class="icon-btn" data-role="delpec" title="Eliminar PEC">✕</button>
+        </div>
+        <div class="pec-due-row">
+          <span class="pec-due-label">Entrega</span>
+          <input type="date" class="pec-due-input" data-role="pecdue" value="${pec.dueDate||''}"/>
+          ${done?`<span class="pec-badge-done">COMPLETO</span>`:''}
+        </div>
+        <div class="pec-progress-row">
+          ${total>0
+            ? `<div class="progress-blocks">${blocks}</div><span class="progress-count">${doneCount}/${total} ejercicios completados</span>`
+            : `<div class="progress-empty">Aún sin ejercicios añadidos</div>`}
+        </div>
+        <div class="pec-expand-hint"><span class="chev">▸</span> ${pec.open?'Ocultar':'Ver'} ejercicios</div>
+      </div>
+      <div class="pec-body">
+        <div class="ex-list">
+          ${pec.exercises.map(ex=>renderExercise(ex, sub)).join('')}
+        </div>
+        <button class="btn-add" data-role="addex"><span class="plus">+</span> Añadir ejercicio</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // wire events
+  wrap.querySelectorAll('.pec-card').forEach(card=>{
+    const pecId = card.dataset.pecid;
+    const pec = list.find(p=>p.id===pecId);
+
+    card.querySelector('[data-role=toggle]').addEventListener('click',(e)=>{
+      if(e.target.closest('[data-role=pecname]')||e.target.closest('[data-role=delpec]')||e.target.closest('[data-role=pecdue]')||e.target.closest('[data-role=toggleblock]')) return;
+      pec.open = !pec.open; save(); renderPecs();
+    });
+    const nameInput = card.querySelector('[data-role=pecname]');
+    nameInput.addEventListener('click',e=>e.stopPropagation());
+    nameInput.addEventListener('input',()=>{ pec.name=nameInput.value; save(); });
+
+    const dueInput = card.querySelector('[data-role=pecdue]');
+    dueInput.addEventListener('click',e=>e.stopPropagation());
+    dueInput.addEventListener('change',()=>{ pec.dueDate=dueInput.value; save(); });
+
+    card.querySelectorAll('[data-role=toggleblock]').forEach(block=>{
+      block.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        const ex = pec.exercises.find(x=>x.id===block.dataset.exid);
+        if(ex) toggleExerciseDone(ex, pec, sub);
+      });
+    });
+
+    card.querySelector('[data-role=delpec]').addEventListener('click',(e)=>{
+      e.stopPropagation();
+      if(confirm(`¿Eliminar "${pec.name}" y todos sus ejercicios?`)){
+        state.pecs[sub.id] = list.filter(p=>p.id!==pecId);
+        save(); renderPecs();
+      }
+    });
+
+    const addExBtn = card.querySelector('[data-role=addex]');
+    if(addExBtn) addExBtn.addEventListener('click',()=>{
+      pec.exercises.push({id:uid(), enunciado:'', fecha:'', notas:'', errores:'', done:false});
+      pec.open = true;
+      save(); renderPecs();
+    });
+
+    wireExerciseEvents(card, pec, sub);
+  });
+
+  // auto-grow textareas
+  wrap.querySelectorAll('textarea').forEach(t=>autoGrow(t));
+}
+
+function renderExercise(ex, sub){
+  return `
+  <div class="ex-card ${ex.done?'done':''}" data-exid="${ex.id}">
+    <div class="ex-top">
+      <button class="ex-check ${ex.done?'checked':''}" data-role="excheck" style="--c:var(${sub.var})">✓</button>
+      <textarea class="ex-enunciado" data-role="exenun" rows="1" placeholder="Enunciado del ejercicio…">${escapeHtml(ex.enunciado)}</textarea>
+      <button class="icon-btn ex-del" data-role="exdel" title="Eliminar ejercicio">✕</button>
+    </div>
+    <div class="ex-meta">
+      <label>Fecha de finalización</label>
+      <input type="date" data-role="exfecha" value="${ex.fecha||''}"/>
+    </div>
+    <details class="ex-notes" data-role="exnotesdetails" ${ex.notasOpen?'open':''}>
+      <summary>Notas</summary>
+      <textarea data-role="exnotas" placeholder="Añade notas sobre este ejercicio…">${escapeHtml(ex.notas)}</textarea>
+    </details>
+    <div class="ex-errores">
+      <label>⚠ Errores y dudas importantes</label>
+      <textarea data-role="exerrores" placeholder="Anota aquí lo que no te ha quedado claro o los errores cometidos…">${escapeHtml(ex.errores)}</textarea>
+    </div>
+  </div>`;
+}
+
+function toggleExerciseDone(ex, pec, sub){
+  const wasDone = ex.done;
+  ex.done = !ex.done;
+  if(ex.done && !wasDone){
+    addXp(XP_PER_EXERCISE);
+    state.todayExercises = (state.todayExercises||0)+1;
+    registerActivity();
+    const pecNowDone = pec.exercises.length>0 && pec.exercises.every(e=>e.done);
+    showPopup({tier:'sub', icon:'✅', title:'¡Ejercicio completado!', desc:pec.name, xp:XP_PER_EXERCISE});
+    if(pecNowDone){
+      addXp(XP_PER_PEC_BONUS);
+      state.todayPecs = (state.todayPecs||0)+1;
+      setTimeout(()=>{
+        showPopup({tier:'logro', icon:'🏆', title:'¡PEC completado!', desc:`Has terminado "${pec.name}" (${sub.code}) con éxito.`, xp:XP_PER_PEC_BONUS});
+      }, 50);
+    }
+    checkAchievements();
+  } else if(!ex.done && wasDone){
+    addXp(-XP_PER_EXERCISE);
+    state.todayExercises = Math.max(0, (state.todayExercises||0)-1);
+  }
+  save(); renderPecs(); renderHud();
+}
+
+function wireExerciseEvents(card, pec, sub){
+  card.querySelectorAll('.ex-card').forEach(exCard=>{
+    const exId = exCard.dataset.exid;
+    const ex = pec.exercises.find(x=>x.id===exId);
+
+    const checkBtn = exCard.querySelector('[data-role=excheck]');
+    checkBtn.addEventListener('click',()=>{
+      toggleExerciseDone(ex, pec, sub);
+    });
+
+    const enun = exCard.querySelector('[data-role=exenun]');
+    enun.addEventListener('input',()=>{ ex.enunciado=enun.value; autoGrow(enun); save(); });
+
+    exCard.querySelector('[data-role=exfecha]').addEventListener('change',(e)=>{ ex.fecha=e.target.value; save(); });
+
+    const notesDet = exCard.querySelector('[data-role=exnotesdetails]');
+    notesDet.addEventListener('toggle',()=>{ ex.notasOpen = notesDet.open; save(); });
+    const notesTa = exCard.querySelector('[data-role=exnotas]');
+    notesTa.addEventListener('input',()=>{ ex.notas=notesTa.value; autoGrow(notesTa); save(); });
+
+    const errTa = exCard.querySelector('[data-role=exerrores]');
+    errTa.addEventListener('input',()=>{ ex.errores=errTa.value; autoGrow(errTa); save(); });
+
+    exCard.querySelector('[data-role=exdel]').addEventListener('click',()=>{
+      pec.exercises = pec.exercises.filter(x=>x.id!==exId);
+      save(); renderPecs();
+    });
+  });
+}
+
+/* ================= RENDER: TEMARIO ================= */
+function renderTemario(){
+  renderPills('subjectPillsTemario','activeSubjectTemario', renderTemario);
+  const sub = subjectMeta(state.activeSubjectTemario);
+  document.getElementById('temaSubjectTitle').textContent = sub.name;
+  const list = state.topics[sub.id];
+  const grid = document.getElementById('topicGrid');
+
+  if(list.length===0){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span class="glyph">📄</span>Todavía no hay temas añadidos.<br>Ve creando casillas a medida que te lleguen los PDFs.</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(t=>`
+    <div class="topic-card" data-tid="${t.id}" style="border-color:var(${sub.var})33">
+      <button class="icon-btn" data-role="deltopic" title="Eliminar tema">✕</button>
+      <input class="t-title" data-role="ttitle" value="${escapeAttr(t.title)}" placeholder="Nombre del tema" />
+      <textarea class="t-note" data-role="tnote" placeholder="Nota breve (opcional)…">${escapeHtml(t.note)}</textarea>
+    </div>`).join('');
+
+  grid.querySelectorAll('.topic-card').forEach(card=>{
+    const tid = card.dataset.tid;
+    const t = list.find(x=>x.id===tid);
+    card.querySelector('[data-role=ttitle]').addEventListener('input',(e)=>{ t.title=e.target.value; save(); });
+    const noteTa = card.querySelector('[data-role=tnote]');
+    noteTa.addEventListener('input',()=>{ t.note=noteTa.value; autoGrow(noteTa); save(); });
+    card.querySelector('[data-role=deltopic]').addEventListener('click',()=>{
+      state.topics[sub.id] = list.filter(x=>x.id!==tid);
+      save(); renderTemario();
+    });
+  });
+  grid.querySelectorAll('textarea').forEach(t=>autoGrow(t));
+}
+
+/* ================= RENDER: LOGROS ================= */
+function renderLogros(){
+  const totalEx = countDoneExercises(state);
+  const totalPecs = countDonePecs(state);
+  const hours = (state.studySeconds/3600).toFixed(1);
+  const {level} = levelFromXp(state.xp);
+  document.getElementById('statRow').innerHTML = `
+    <div class="stat-box"><div class="val">${state.xp}</div><div class="lbl">XP total</div></div>
+    <div class="stat-box"><div class="val">${level}</div><div class="lbl">Nivel</div></div>
+    <div class="stat-box"><div class="val">${state.streak.count}</div><div class="lbl">Racha (días)</div></div>
+    <div class="stat-box"><div class="val">${hours}</div><div class="lbl">Horas estudiadas</div></div>
+    <div class="stat-box"><div class="val">${totalEx}</div><div class="lbl">Ejercicios hechos</div></div>
+    <div class="stat-box"><div class="val">${totalPecs}</div><div class="lbl">PECs completados</div></div>
+  `;
+  document.getElementById('achGrid').innerHTML = ACHIEVEMENTS.map(a=>{
+    const unlocked = state.achievements.includes(a.id);
+    return `<div class="ach-card ${unlocked?'':'locked'}">
+      <span class="ico">${a.ico}</span>
+      <div><div class="tt">${a.title}</div><div class="dd">${a.desc}</div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ================= RENDER: CALENDARIO ================= */
+const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DOW_NAMES = ['L','M','X','J','V','S','D'];
+let calViewYear, calViewMonth, calSelectedDate=null;
+(function initCalView(){
+  const n = new Date();
+  calViewYear = n.getFullYear(); calViewMonth = n.getMonth();
+})();
+
+function dayStats(dateStr){
+  const today = todayStr();
+  if(dateStr === today){
+    return {
+      studySeconds: state.todayStudySeconds||0,
+      xp: state.todayXp||0,
+      exercises: state.todayExercises||0,
+      pecs: state.todayPecs||0
+    };
+  }
+  return state.dailyStats[dateStr] || null;
+}
+
+function renderCalendario(){
+  const titleEl = document.getElementById('calTitle');
+  if(!titleEl) return;
+  titleEl.textContent = `${MONTH_NAMES[calViewMonth]} ${calViewYear}`;
+
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = DOW_NAMES.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+
+  const firstOfMonth = new Date(calViewYear, calViewMonth, 1);
+  let startOffset = firstOfMonth.getDay()-1; // lunes=0
+  if(startOffset<0) startOffset=6;
+  const daysInMonth = new Date(calViewYear, calViewMonth+1, 0).getDate();
+  const today = todayStr();
+
+  for(let i=0;i<startOffset;i++){
+    grid.insertAdjacentHTML('beforeend', `<div class="cal-day empty"></div>`);
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${calViewYear}-${String(calViewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const stats = dayStats(dateStr);
+    const hasActivity = !!(stats && (stats.studySeconds>0 || stats.xp>0 || stats.exercises>0 || stats.pecs>0));
+    const isToday = dateStr===today;
+    grid.insertAdjacentHTML('beforeend', `
+      <div class="cal-day ${hasActivity?'has-activity':''} ${isToday?'today':''}" data-date="${dateStr}">
+        <span>${d}</span>
+        ${hasActivity?'<span class="dot"></span>':''}
+      </div>`);
+  }
+
+  grid.querySelectorAll('.cal-day[data-date]').forEach(cell=>{
+    cell.addEventListener('click', ()=>{
+      calSelectedDate = cell.dataset.date;
+      renderCalDetail();
+    });
+  });
+
+  if(calSelectedDate) renderCalDetail();
+}
+
+function renderCalDetail(){
+  const detail = document.getElementById('calDetail');
+  if(!detail || !calSelectedDate) return;
+  const stats = dayStats(calSelectedDate);
+  if(!stats){
+    detail.innerHTML = `Sin actividad registrada el <b>${calSelectedDate}</b>.`;
+    return;
+  }
+  const hours = (stats.studySeconds/3600).toFixed(1);
+  detail.innerHTML = `
+    <b>${calSelectedDate}</b><br>
+    ⏱ ${hours} h estudiadas · ⚡ ${stats.xp} XP · ✅ ${stats.exercises} ejercicios · 📁 ${stats.pecs} PECs completados`;
+}
+
+document.getElementById('calPrev')?.addEventListener('click', ()=>{
+  calViewMonth--; if(calViewMonth<0){calViewMonth=11; calViewYear--;}
+  renderCalendario();
+});
+document.getElementById('calNext')?.addEventListener('click', ()=>{
+  calViewMonth++; if(calViewMonth>11){calViewMonth=0; calViewYear++;}
+  renderCalendario();
+});
+document.getElementById('calToday')?.addEventListener('click', ()=>{
+  const n = new Date(); calViewYear=n.getFullYear(); calViewMonth=n.getMonth();
+  calSelectedDate = todayStr();
+  renderCalendario();
+});
+
+/* ================= EXPORTAR / IMPORTAR ================= */
+function exportData(){
+  if(timerRunning) commitSessionTime();
+  const dataStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([dataStr], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fecha = todayStr();
+  a.href = url;
+  a.download = `psicoquest-progreso-clara-ortega-garcia-${fecha}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importDataFromFile(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(typeof parsed !== 'object' || parsed===null) throw new Error('formato inválido');
+      if(timerRunning) toggleTimer(); // paramos el cronómetro activo antes de sustituir el estado
+      const d = defaultState();
+      state = Object.assign(d, parsed, {
+        pecs: Object.assign(d.pecs, parsed.pecs||{}),
+        topics: Object.assign(d.topics, parsed.topics||{}),
+        streak: Object.assign(d.streak, parsed.streak||{}),
+        dailyStats: Object.assign(d.dailyStats, parsed.dailyStats||{})
+      });
+      checkDayChange();
+      save();
+      applyTheme();
+      render();
+      showPopup({tier:'sub', icon:'📥', title:'Progreso importado', desc:'Tus datos se han restaurado correctamente.'});
+    }catch(err){
+      alert('No se ha podido importar el archivo. Comprueba que sea un .json exportado desde PsicoQuest.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function wireDataButton(exportId, importId){
+  const exBtn = document.getElementById(exportId);
+  if(exBtn) exBtn.addEventListener('click', exportData);
+  const imBtn = document.getElementById(importId);
+  if(imBtn) imBtn.addEventListener('click', ()=> document.getElementById('importFileInput').click());
+}
+wireDataButton('exportBtn','importBtn');
+wireDataButton('exportBtn2','importBtn2');
+document.getElementById('importFileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  importDataFromFile(file);
+  e.target.value = '';
+});
+
+/* ================= AJUSTES: RESETS ================= */
+document.getElementById('resetAllBtn').addEventListener('click', ()=>{
+  if(!confirm('¿Seguro que quieres eliminar TODO tu progreso? Se borrarán racha, logros, PECs, ejercicios, temario y el calendario de estudio. Tu XP y nivel se mantendrán. Esta acción no se puede deshacer.')) return;
+  if(!confirm('Última confirmación: esta acción es irreversible. ¿Continuar?')) return;
+  if(timerRunning){ timerRunning=false; clearInterval(timerInterval); }
+  const theme = state.theme;
+  const xp = state.xp;
+  const studySeconds = state.studySeconds;
+  state = defaultState();
+  state.theme = theme;
+  state.xp = xp;
+  state.studySeconds = studySeconds;
+  save();
+  applyTheme();
+  document.getElementById('timerToggle').textContent='▶ Iniciar sesión';
+  document.getElementById('timerToggle').classList.remove('active');
+  render();
+  showPopup({tier:'sub', icon:'🗑', title:'Progreso eliminado', desc:'Se ha reiniciado tu progreso en PsicoQuest (XP y nivel conservados).'});
+});
+
+document.getElementById('resetXpBtn').addEventListener('click', ()=>{
+  if(!confirm('¿Reiniciar tu XP y nivel a cero? Tus PECs, ejercicios, temario, logros y calendario no se verán afectados.')) return;
+  state.xp = 0;
+  save();
+  render();
+  showPopup({tier:'sub', icon:'↺', title:'Experiencia reiniciada', desc:'Tu XP y nivel han vuelto a empezar desde cero.'});
+});
+
+/* ================= UTIL ================= */
+function escapeHtml(str){
+  return (str||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+function escapeAttr(str){
+  return (str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ================= MASTER RENDER ================= */
+function render(){
+  renderHud();
+  renderPecs();
+  renderTemario();
+  renderLogros();
+  renderCalendario();
+  if(!timerRunning){
+    document.getElementById('timerDisplay').textContent = fmtTime(state.todayStudySeconds||0);
+  }
+}
+
+/* ================= TABS ================= */
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    ['pecs','temario','logros','calendario','ajustes'].forEach(t=>{
+      document.getElementById('tab-'+t).classList.toggle('hidden', t!==btn.dataset.tab);
+    });
+  });
+});
+
+/* ================= ADD BUTTONS ================= */
+document.getElementById('addPecBtn').addEventListener('click',()=>{
+  const sub = subjectMeta(state.activeSubjectPecs);
+  const n = state.pecs[sub.id].length + 1;
+  state.pecs[sub.id].push({id:uid(), name:`PEC ${n}`, dueDate:'', open:true, exercises:[]});
+  save(); renderPecs();
+});
+document.getElementById('addTopicBtn').addEventListener('click',()=>{
+  const sub = subjectMeta(state.activeSubjectTemario);
+  state.topics[sub.id].push({id:uid(), title:'Nuevo tema', note:''});
+  save(); renderTemario();
+});
+document.getElementById('timerToggle').addEventListener('click', toggleTimer);
+
+window.addEventListener('beforeunload', ()=>{ if(timerRunning) commitSessionTime(); });
+
+/* ================= SYNAPSE BACKGROUND ================= */
+function buildSynapseNet(){
+  const svg = document.getElementById('synapseNet');
+  const cs = getComputedStyle(document.documentElement);
+  const lineColor = (cs.getPropertyValue('--teal')||'#3ED9C5').trim();
+  const dotColor = (cs.getPropertyValue('--violet')||'#9B8CFF').trim();
+  const w = window.innerWidth, h = window.innerHeight;
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  const n = Math.max(14, Math.floor((w*h)/70000));
+  const pts = Array.from({length:n}, ()=>({x:Math.random()*w, y:Math.random()*h}));
+  let lines='', dots='';
+  pts.forEach((p,i)=>{
+    pts.forEach((q,j)=>{
+      if(j<=i) return;
+      const d = Math.hypot(p.x-q.x, p.y-q.y);
+      if(d<170){
+        lines += `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="${lineColor}" stroke-opacity="${0.14*(1-d/170)}" stroke-width="1"/>`;
+      }
+    });
+    dots += `<circle cx="${p.x}" cy="${p.y}" r="1.6" fill="${dotColor}" fill-opacity="0.4"/>`;
+  });
+  svg.innerHTML = lines+dots;
+}
+window.addEventListener('resize', buildSynapseNet);
+
+/* ================= THEME ================= */
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.theme==='dark' ? 'dark' : 'light');
+  const btn = document.getElementById('themeToggle');
+  btn.textContent = state.theme==='dark' ? '☀️ Modo día' : '🌙 Modo noche';
+  buildSynapseNet();
+}
+function toggleTheme(){
+  state.theme = state.theme==='dark' ? 'light' : 'dark';
+  save();
+  applyTheme();
+}
+document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+/* ================= INIT =================
+   El arranque real (checkDayChange + applyTheme + render) ocurre en
+   startAppForUser(), una vez el usuario ha iniciado sesión con Google
+   y se han cargado sus datos desde la nube. */
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw-psicoquest.js').catch(()=>{});
+  });
+}
+
+})();
+</script>
+</body>
+</html>

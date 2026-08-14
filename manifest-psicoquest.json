@@ -1,0 +1,17 @@
+{
+  "name": "PsicoQuest",
+  "short_name": "PsicoQuest",
+  "description": "Panel de estudio gamificado para Psicología: PECs, temario, calendario y logros.",
+  "start_url": "./SHE_IS_PSICOG_logy.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFF7FB",
+  "theme_color": "#EFA6CB",
+  "icons": [
+    { "src": "icons/psicoquest-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/psicoquest-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/psicoquest-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/psicoquest-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

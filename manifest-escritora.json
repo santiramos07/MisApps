@@ -1,0 +1,17 @@
+{
+  "name": "Cuaderno de Escritura",
+  "short_name": "Cuaderno",
+  "description": "Cuaderno de escritura con seguimiento de personajes, ubicaciones, ideas y publicaciones.",
+  "start_url": "./escritora-libros.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FBF7FF",
+  "theme_color": "#B48AD9",
+  "icons": [
+    { "src": "icons/escritora-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/escritora-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/escritora-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/escritora-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
