@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#8FC9A0">
 <title>Checking In — Diario emocional</title>
-<link rel="manifest" href="salud-manifest.json">
-<link rel="apple-touch-icon" href="salud-icon-192.png">
-<link rel="icon" href="salud-icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500;1,6..72,600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -648,12 +648,12 @@ input[type=number]{-moz-appearance:textfield;}
    ========================================================================= */
 
 const FIREBASE_CONFIG = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  projectId: "TU_PROYECTO",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyAqfNfNXczHS6E8StYAcjQ1JrFoLVBWlg8",
+  authDomain: "mis-apps-cog.firebaseapp.com",
+  projectId: "mis-apps-cog",
+  storageBucket: "mis-apps-cog.firebasestorage.app",
+  messagingSenderId: "436016018509",
+  appId: "1:436016018509:web:e7d15ae5d3d0558655d804"
 };
 
 const ALLOWED_EMAILS = [
@@ -1450,7 +1450,7 @@ function render(){
 /* ================= SERVICE WORKER (para poder instalarla como app) ================= */
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('salud-sw.js').catch(err=>console.error('SW error:', err));
+    navigator.serviceWorker.register('sw.js').catch(err=>console.error('SW error:', err));
   });
 }
 
@@ -1476,81 +1476,3 @@ service cloud.firestore {
 </script>
 </body>
 </html>
-
-{
-  "name": "Checking in with myself",
-  "short_name": "Checking In",
-  "description": "Diario emocional privado — ánimo, pensamientos, ejercicio y calendario.",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#FBFAF7",
-  "theme_color": "#8FC9A0",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "salud-icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "salud-icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "salud-icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "salud-icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ]
-}
-
-const CACHE_NAME = 'salud-checking-in-with-myself-v1';
-const APP_SHELL = [
-  './',
-  './index.html',
-  './salud-manifest.json',
-  './salud-icon-192.png',
-  './salud-icon-512.png'
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-  // Deja pasar siempre las peticiones a Firebase/Google (auth y datos en vivo).
-  if (event.request.url.includes('firebase') || event.request.url.includes('google')) return;
-
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      }).catch(() => cached);
-    })
-  );
-});
