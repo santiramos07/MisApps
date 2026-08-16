@@ -429,6 +429,17 @@ main{max-width:1180px;margin:0 auto;padding:22px 28px 40px;position:relative;z-i
 }
 .data-btn:hover{border-color:var(--text-mid);}
 
+/* ---------- aviso de guardado ---------- */
+.save-toast{
+  position:fixed; bottom:22px; right:22px; z-index:600;
+  background:var(--ink-850); color:var(--text-hi); border:1px solid var(--line);
+  font-size:12.5px; font-weight:600; padding:10px 16px; border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+  opacity:0; transform:translateY(8px); pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+}
+.save-toast.show{opacity:1; transform:translateY(0);}
+.save-toast.error{background:#c0392b; border-color:#c0392b; color:#fff; max-width:320px; line-height:1.4;}
+
 /* ---------- auth gate ---------- */
 body.app-locked > *:not(#authGate){display:none !important;}
 #authGate{
@@ -676,6 +687,8 @@ body.app-locked > *:not(#authGate){display:none !important;}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<div class="save-toast" id="saveToast">Guardado ✓</div>
+
 <script>
 (function(){
 "use strict";
@@ -741,14 +754,56 @@ let cloudSaveTimer = null;
 
 function cloudDocRef(){ return fbDb.collection(CLOUD_COLLECTION).doc(currentUser.uid); }
 
+let saveToastTimer=null;
+function flashSaveToast(){
+  const t = document.getElementById('saveToast');
+  if(!t) return;
+  t.classList.remove('error');
+  t.textContent = 'Guardado ✓';
+  t.classList.add('show');
+  clearTimeout(saveToastTimer);
+  saveToastTimer = setTimeout(()=>t.classList.remove('show'), 1400);
+}
+function showSaveError(msg){
+  const t = document.getElementById('saveToast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show','error');
+  clearTimeout(saveToastTimer);
+  saveToastTimer = setTimeout(()=>t.classList.remove('show','error'), 6000);
+}
+
+function flushCloudSave(){
+  if(!currentUser) return;
+  clearTimeout(cloudSaveTimer);
+  const payload = JSON.stringify(state);
+  const sizeBytes = new Blob([payload]).size;
+  if(sizeBytes > 900000){
+    showSaveError('No se ha podido guardar en la nube: hay demasiado contenido (' + Math.round(sizeBytes/1024) + ' KB, el límite son ~1000 KB). Borra algo e inténtalo de nuevo.');
+    return;
+  }
+  suppressNextSnapshot = true;
+  cloudDocRef().set(state).then(()=>{
+    flashSaveToast();
+  }).catch(err=>{
+    console.error('Error guardando en la nube:', err);
+    showSaveError('No se pudo guardar en la nube: ' + err.message);
+  });
+}
 function cloudSave(){
   if(!currentUser) return;
   clearTimeout(cloudSaveTimer);
-  cloudSaveTimer = setTimeout(()=>{
-    suppressNextSnapshot = true;
-    cloudDocRef().set(state).catch(err=>console.error('Error guardando en la nube:', err));
-  }, 700);
+  cloudSaveTimer = setTimeout(flushCloudSave, 700);
 }
+// Si se cierra la pestaña o se cambia de app justo después de un cambio,
+// no esperamos los 700ms del debounce: se intenta guardar ya mismo, para
+// no perder ese último cambio antes de que llegue a sincronizarse.
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'hidden' && cloudSaveTimer) flushCloudSave();
+});
+window.addEventListener('pagehide', ()=>{
+  if(cloudSaveTimer) flushCloudSave();
+});
 
 function listenCloud(){
   if(cloudUnsub) cloudUnsub();
