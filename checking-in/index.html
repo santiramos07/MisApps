@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#8FC9A0">
+<title>Checking In — Diario emocional</title>
+<link rel="manifest" href="salud-manifest.json">
+<link rel="apple-touch-icon" href="salud-icon-192.png">
+<link rel="icon" href="salud-icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500;1,6..72,600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --paper:#FBFAF7;
+  --paper-raised:#FFFFFF;
+  --paper-sunken:#F4F2EC;
+  --ink:#332E38;
+  --ink-soft:#847C8C;
+  --ink-faint:#B7AFC2;
+  --line:#E9E3F0;
+  --line-soft:#F0EBF7;
+
+  /* pastel palette, one family per mood-category / section */
+  --mint:#8FC9A0;      --mint-bg:#E6F5EA;      --mint-line:#C8E9D2;
+  --coral:#E8909B;      --coral-bg:#FCE7EA;     --coral-line:#F5C9D0;
+  --amber:#E3AA4E;      --amber-bg:#FCF0DA;     --amber-line:#F5DBA6;
+  --lilac:#A896D6;      --lilac-bg:#EFE9FA;     --lilac-line:#D9CDF2;
+  --sky:#7BAAD1;         --sky-bg:#E3EFF9;       --sky-line:#BFDAF0;
+  --peach:#E8A87C;       --peach-bg:#FBEBDD;     --peach-line:#F3D3B4;
+  --rose-deep:#C97A8A;
+
+  --font-display:'Newsreader',Georgia,serif;
+  --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'Space Mono','Courier New',monospace;
+  --radius:18px;
+  --radius-sm:12px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-body);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer;}
+input,textarea,select{font-family:inherit;}
+::selection{background:var(--mint-bg);}
+
+/* ================= LOGIN SCREEN ================= */
+#loginScreen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:32px;background:
+    radial-gradient(circle at 15% 10%, var(--mint-bg), transparent 55%),
+    radial-gradient(circle at 85% 15%, var(--sky-bg), transparent 55%),
+    radial-gradient(circle at 50% 95%, var(--lilac-bg), transparent 55%),
+    var(--paper);
+}
+.login-card{
+  max-width:420px;width:100%;background:var(--paper-raised);
+  border:1px solid var(--line);border-radius:24px;padding:44px 36px;
+  text-align:center;box-shadow:0 20px 60px -20px rgba(90,60,120,.15);
+}
+.login-mark{
+  width:56px;height:56px;border-radius:50%;margin:0 auto 20px;
+  background:linear-gradient(135deg,var(--mint),var(--sky));
+  display:flex;align-items:center;justify-content:center;
+}
+.login-mark svg{width:26px;height:26px;}
+.login-card h1{font-family:var(--font-display);font-size:26px;font-weight:600;margin:0 0 6px;font-style:italic;}
+.login-card p.tagline{color:var(--ink-soft);font-size:14px;margin:0 0 28px;line-height:1.5;}
+.google-btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--paper-raised);border:1px solid var(--line);color:var(--ink);
+  padding:13px 18px;border-radius:14px;font-size:14.5px;font-weight:600;
+  transition:.15s;
+}
+.google-btn:hover{border-color:var(--mint);background:var(--mint-bg);}
+.google-btn svg{width:18px;height:18px;flex-shrink:0;}
+.login-note{margin-top:18px;font-size:11.5px;color:var(--ink-faint);line-height:1.5;}
+.login-error{
+  margin-top:16px;padding:12px 14px;border-radius:12px;
+  background:var(--coral-bg);border:1px solid var(--coral-line);
+  color:var(--rose-deep);font-size:13px;display:none;text-align:left;line-height:1.5;
+}
+.login-error.show{display:block;}
+.login-loading{display:none;margin-top:16px;font-size:13px;color:var(--ink-soft);}
+.login-loading.show{display:block;}
+
+/* ================= APP SHELL ================= */
+#app{display:none;}
+#app.show{display:block;}
+.hud{
+  position:sticky;top:0;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:16px 28px;background:rgba(251,250,247,.9);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);flex-wrap:wrap;
+}
+.hud-brand{display:flex;align-items:center;gap:11px;}
+.hud-brand .mark{
+  width:36px;height:36px;border-radius:11px;
+  background:linear-gradient(135deg,var(--mint),var(--sky));
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.hud-brand .mark svg{width:18px;height:18px;color:#fff;}
+.hud-brand .brand-text{font-family:var(--font-display);font-weight:600;font-size:18px;font-style:italic;line-height:1.1;}
+.hud-brand .brand-text small{display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;color:var(--ink-soft);font-weight:400;text-transform:uppercase;font-style:normal;margin-top:3px;}
+.hud-center{flex:1;min-width:160px;text-align:center;}
+.hud-center .hud-name{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:17px;color:var(--ink);line-height:1.2;}
+.hud-center .hud-msg{font-size:11.5px;color:var(--ink-soft);margin-top:3px;font-weight:400;line-height:1.4;}
+.hud-right{display:flex;align-items:center;gap:10px;}
+.sync-chip{
+  display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10.5px;
+  color:var(--ink-soft);background:var(--paper-sunken);border:1px solid var(--line);
+  padding:6px 11px;border-radius:100px;
+}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--mint);}
+.sync-dot.saving{background:var(--amber);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.user-chip{
+  display:flex;align-items:center;gap:8px;background:var(--paper-sunken);
+  border:1px solid var(--line);padding:6px 12px 6px 6px;border-radius:100px;font-size:12.5px;
+}
+.user-chip img{width:24px;height:24px;border-radius:50%;}
+.logout-btn{
+  background:none;border:1px solid var(--line);color:var(--ink-soft);
+  padding:8px 14px;border-radius:100px;font-size:12px;font-weight:600;
+}
+.logout-btn:hover{color:var(--rose-deep);border-color:var(--coral);}
+
+.tabs{
+  display:flex;gap:4px;padding:14px 28px 0;max-width:1020px;margin:0 auto;overflow-x:auto;
+}
+.tab{
+  background:none;border:none;color:var(--ink-soft);font-family:var(--font-display);
+  font-style:italic;font-size:15.5px;font-weight:600;white-space:nowrap;
+  padding:10px 18px;border-radius:12px 12px 0 0;position:relative;top:1px;
+}
+.tab.active{color:var(--ink);background:var(--paper-raised);border:1px solid var(--line);border-bottom:1px solid var(--paper-raised);}
+.tab:not(.active):hover{color:var(--ink);}
+
+main{max-width:1020px;margin:0 auto;padding:0 28px 60px;}
+.panel{
+  background:var(--paper-raised);border:1px solid var(--line);
+  border-radius:0 var(--radius) var(--radius) var(--radius);padding:28px;
+}
+.hidden{display:none !important;}
+
+.section-head{margin-bottom:22px;}
+.section-head h2{font-family:var(--font-display);font-style:italic;font-size:22px;margin:0 0 4px;font-weight:600;}
+.section-head .sub{font-size:13px;color:var(--ink-soft);line-height:1.5;}
+
+.card-block{border-radius:16px;padding:20px 22px;margin-bottom:18px;}
+.card-block:last-child{margin-bottom:0;}
+.card-block.c-mint{background:var(--mint-bg);border:1px solid var(--mint-line);}
+.card-block.c-coral{background:var(--coral-bg);border:1px solid var(--coral-line);}
+.card-block.c-amber{background:var(--amber-bg);border:1px solid var(--amber-line);}
+.card-block.c-lilac{background:var(--lilac-bg);border:1px solid var(--lilac-line);}
+.card-block.c-sky{background:var(--sky-bg);border:1px solid var(--sky-line);}
+.card-block.c-peach{background:var(--peach-bg);border:1px solid var(--peach-line);}
+
+.date-display{
+  font-family:var(--font-display);font-style:italic;font-size:20px;color:var(--ink);margin-bottom:2px;
+}
+.date-sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:22px;}
+
+.field-label{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--ink-soft);margin-bottom:12px;display:block;font-weight:700;
+}
+.mood-cat-title{
+  font-family:var(--font-display);font-style:italic;font-size:15px;font-weight:600;
+  margin:0 0 10px;display:flex;align-items:center;gap:7px;
+}
+.mood-cat-title .dot{width:9px;height:9px;border-radius:50%;}
+.mood-cat-block{margin-bottom:16px;}
+.mood-cat-block:last-child{margin-bottom:0;}
+
+/* ---- mood grid ---- */
+.mood-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.mood-btn{
+  border:1.5px solid rgba(255,255,255,.7);background:rgba(255,255,255,.55);color:var(--ink);
+  padding:8px 14px;border-radius:100px;font-size:12.5px;font-weight:600;
+  display:flex;align-items:center;gap:7px;transition:.12s;
+}
+.mood-btn .dot{width:7px;height:7px;border-radius:50%;background:var(--c);flex-shrink:0;}
+.mood-btn.active{color:#fff;background:var(--c);border-color:var(--c);}
+.mood-btn:hover:not(.active){border-color:var(--c);}
+
+/* ---- sliders ---- */
+.slider-block{margin-bottom:16px;}
+.slider-block:last-child{margin-bottom:0;}
+.slider-block-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
+.slider-block-head .name{font-size:13.5px;font-weight:600;}
+.slider-block-head .val{font-family:var(--font-mono);font-size:14px;font-weight:700;}
+.slider-row input[type=range]{width:100%;height:5px;}
+input[type=range]{-webkit-appearance:none;background:rgba(255,255,255,.7);border-radius:100px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--c,var(--mint));box-shadow:0 2px 6px rgba(0,0,0,.15);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--c,var(--mint));box-shadow:0 2px 6px rgba(0,0,0,.15);cursor:pointer;}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:640px){.two-col{grid-template-columns:1fr;}}
+
+input[type=text],input[type=number],textarea,select{
+  width:100%;background:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.9);border-radius:10px;
+  padding:10px 13px;font-size:13.5px;color:var(--ink);
+}
+textarea{resize:none;overflow:hidden;min-height:44px;line-height:1.5;transition:height .18s ease, font-size .18s ease, padding .18s ease;}
+input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{
+  outline:none;background:#fff;
+}
+textarea:focus{font-size:14.5px;padding:12px 15px;}
+input[type=number]{-moz-appearance:textfield;}
+
+.save-note{
+  display:flex;align-items:center;gap:8px;margin-top:20px;
+  font-size:12px;color:var(--ink-faint);
+}
+
+/* ---- thoughts table ---- */
+.thoughts-table{width:100%;border-collapse:separate;border-spacing:0 10px;}
+.thoughts-table th{
+  text-align:left;font-family:var(--font-mono);font-size:10px;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--ink-soft);padding:0 12px 6px;font-weight:700;
+}
+.thoughts-table td{padding:12px;vertical-align:top;}
+.thoughts-table tr{background:var(--paper-sunken);}
+.thoughts-table tr td:first-child{border-radius:12px 0 0 12px;}
+.thoughts-table tr td:last-child{border-radius:0 12px 12px 0;}
+.thoughts-table td.col-date{width:110px;font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);padding-top:18px;}
+.thoughts-table td.col-del{width:36px;text-align:center;}
+.thoughts-table textarea{min-height:52px;font-size:13px;background:#fff;}
+.thoughts-table .cell-intrusive textarea{border-left:4px solid var(--coral);}
+.thoughts-table .cell-logical textarea{border-left:4px solid var(--mint);}
+.row-del{
+  background:none;border:none;color:var(--ink-faint);font-size:16px;padding:6px;border-radius:8px;
+}
+.row-del:hover{color:var(--rose-deep);background:var(--coral-bg);}
+.btn-add{
+  border:1.5px dashed var(--line);background:transparent;color:var(--ink-soft);
+  padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;
+  margin-top:16px;transition:.15s;
+}
+.btn-add:hover{color:var(--ink);border-color:var(--mint);background:var(--mint-bg);}
+.btn-add .plus{font-family:var(--font-mono);font-size:15px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--ink-faint);font-size:13px;}
+
+/* ---- exercise (redesigned) ---- */
+.ex-type-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+.ex-type-card{
+  border:2px solid transparent;background:rgba(255,255,255,.65);border-radius:14px;
+  padding:16px 10px;text-align:center;transition:.15s;
+}
+.ex-type-card .emoji{font-size:26px;display:block;margin-bottom:8px;}
+.ex-type-card .name{font-size:12.5px;font-weight:700;color:var(--ink);}
+.ex-type-card:hover{background:#fff;}
+.ex-type-card.active{border-color:var(--sky);background:#fff;box-shadow:0 4px 14px -4px rgba(90,118,144,.35);}
+
+.ex-duration-wrap{margin-top:18px;}
+.ex-feel-row{display:flex;gap:8px;margin-top:6px;}
+.ex-feel-btn{
+  flex:1;border:1.5px solid rgba(255,255,255,.8);background:rgba(255,255,255,.6);border-radius:12px;
+  padding:12px 6px;text-align:center;font-size:22px;transition:.12s;
+}
+.ex-feel-btn.active{background:#fff;border-color:var(--sky);}
+.ex-feel-btn .lbl{display:block;font-size:9.5px;font-family:var(--font-mono);color:var(--ink-soft);margin-top:4px;text-transform:uppercase;}
+
+.strength-toggle{
+  display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;
+}
+.strength-toggle .chk{
+  width:20px;height:20px;border-radius:6px;border:1.5px solid var(--lilac);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;background:#fff;
+}
+.strength-toggle .chk.on{background:var(--lilac);border-color:var(--lilac);}
+.strength-toggle .chk.on::after{content:'✓';color:#fff;font-size:12px;font-weight:700;}
+.strength-toggle span{font-size:13.5px;font-weight:600;color:var(--ink);}
+#strengthBlock{margin-top:16px;}
+.strength-rows{display:flex;flex-direction:column;gap:10px;}
+.strength-row{display:grid;grid-template-columns:1fr 64px 64px 64px 34px;gap:8px;align-items:center;}
+.strength-row input{padding:9px 10px;font-size:12.5px;background:#fff;}
+.strength-row .rlabel{font-family:var(--font-mono);font-size:9px;color:var(--ink-soft);text-align:center;text-transform:uppercase;}
+.strength-head{display:grid;grid-template-columns:1fr 64px 64px 64px 34px;gap:8px;margin-bottom:2px;}
+
+/* ---- happy things ---- */
+.happy-cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;}
+
+/* ---- alimentación ---- */
+.food-meals{display:flex;flex-direction:column;gap:16px;}
+.food-meal-block .meal-label{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;display:block;}
+.food-meal-block textarea{min-height:52px;}
+.happy-cat h3{font-family:var(--font-display);font-style:italic;font-size:16px;margin:0 0 12px;}
+.happy-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.happy-item{
+  display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,.7);
+  border:1px solid rgba(255,255,255,.9);border-radius:10px;padding:9px 12px;
+}
+.happy-item textarea{
+  background:transparent;border:none;padding:2px;font-size:13.5px;line-height:1.5;
+  resize:none;overflow:hidden;min-height:20px;width:100%;font-family:inherit;
+  transition:height .18s ease, font-size .18s ease;
+}
+.happy-item textarea:focus{outline:none;font-size:14.5px;padding:2px;}
+.happy-item .row-del{margin-top:2px;flex-shrink:0;}
+
+/* ---- configuración ---- */.danger-box{border:1px solid var(--coral-line);background:var(--coral-bg);border-radius:16px;padding:22px;}
+.danger-box h3{font-family:var(--font-display);font-style:italic;font-size:16px;margin:0 0 6px;color:var(--rose-deep);}
+.danger-box p{font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0 0 16px;}
+.btn-danger{
+  background:var(--coral);color:#fff;border:none;padding:12px 20px;border-radius:12px;
+  font-size:13.5px;font-weight:700;transition:.15s;
+}
+.btn-danger:hover{background:var(--rose-deep);}
+.reset-confirm{margin-top:14px;display:none;}
+.reset-confirm.show{display:block;}
+.reset-confirm p{color:var(--rose-deep);font-weight:600;}
+.reset-confirm .row{display:flex;gap:10px;}
+.btn-secondary{
+  background:transparent;color:var(--ink-soft);border:1px solid var(--line);padding:12px 20px;
+  border-radius:12px;font-size:13.5px;font-weight:600;
+}
+.btn-secondary:hover{color:var(--ink);border-color:var(--ink-faint);}
+.reset-done{margin-top:14px;font-size:13px;color:var(--mint);font-weight:600;display:none;}
+.reset-done.show{display:block;}
+
+/* ---- calendar ---- */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.cal-nav{display:flex;align-items:center;gap:10px;}
+.cal-nav button{
+  width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:var(--paper-sunken);
+  color:var(--ink-soft);font-size:14px;display:flex;align-items:center;justify-content:center;
+}
+.cal-nav button:hover{color:var(--ink);border-color:var(--sky);}
+.cal-title{font-family:var(--font-display);font-style:italic;font-size:19px;min-width:170px;text-align:center;}
+.cal-today-btn{
+  border:1px solid var(--line);background:transparent;color:var(--ink-soft);
+  padding:7px 14px;border-radius:100px;font-size:12px;font-weight:600;
+}
+.cal-today-btn:hover{border-color:var(--sky);color:var(--ink);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+.cal-dow{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);text-align:center;padding-bottom:4px;text-transform:uppercase;}
+.cal-cell{
+  min-height:78px;border-radius:12px;border:1px solid var(--line-soft);background:var(--paper-sunken);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding:8px 4px;
+  font-size:12.5px;color:var(--ink-soft);position:relative;transition:.12s;
+}
+.cal-cell.has-entry{cursor:pointer;}
+.cal-cell.has-entry:hover{border-color:var(--sky);transform:translateY(-1px);}
+.cal-cell.empty{background:transparent;border:none;}
+.cal-cell.today{border-color:var(--sky);border-width:2px;}
+.cal-cell.selected{background:var(--sky-bg);border-color:var(--sky);}
+.cal-dots{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;}
+.cal-dot{width:8px;height:8px;border-radius:50%;}
+.cal-icons{display:flex;gap:3px;font-size:10px;margin-top:1px;}
+.cal-detail{
+  margin-top:22px;padding-top:20px;border-top:1px solid var(--line);
+}
+.cal-detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.cal-detail-head h3{font-family:var(--font-display);font-style:italic;font-size:17px;margin:0;}
+.cal-detail-grid{display:flex;flex-direction:column;gap:12px;}
+.cal-detail-row{
+  background:var(--paper-sunken);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.55;
+}
+.cal-detail-row b{font-family:var(--font-mono);font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-soft);display:block;margin-bottom:5px;font-weight:700;}
+.cal-legend-mini{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-soft);}
+.legend-item .dot{width:9px;height:9px;border-radius:50%;}
+
+@media(max-width:640px){
+  .hud{padding:12px 16px;}
+  .tabs{padding:10px 16px 0;}
+  main{padding:0 16px 40px;}
+  .panel{padding:18px;}
+  .card-block{padding:16px;}
+  .strength-row,.strength-head{grid-template-columns:1fr 52px 52px 52px 28px;}
+  .cal-cell{min-height:56px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-mark">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-10-9.2C.4 8.3 2 4.5 5.6 4c2-.3 3.7.6 4.9 2.1C11.7 4.6 13.4 3.7 15.4 4c3.6.5 5.2 4.3 3.6 7.8C16.5 16.4 12 21 12 21z" stroke="#fff" stroke-width="1.6" fill="none"/></svg>
+    </div>
+    <h1>Checking in with myself</h1>
+    <p class="tagline">Un espacio privado para registrar emociones, pensamientos y avances, día a día.</p>
+    <button class="google-btn" id="googleSignInBtn">
+      <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.4 0-13.8 4.2-17 10.3z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.2-5.1l-6.6-5.4C29.6 35.2 27 36 24 36c-5.2 0-9.6-3.3-11.2-7.9l-6.6 5.1C9.9 39.6 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.3-4.1 5.7l6.6 5.4C39.9 36.9 44 31 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+      Iniciar sesión con Google
+    </button>
+    <div class="login-loading" id="loginLoading">Comprobando acceso…</div>
+    <div class="login-error" id="loginError"></div>
+    <p class="login-note">El acceso está limitado a dos cuentas autorizadas. Los datos se guardan de forma privada y se sincronizan entre tus dispositivos.</p>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <div class="hud">
+    <div class="hud-brand">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-10-9.2C.4 8.3 2 4.5 5.6 4c2-.3 3.7.6 4.9 2.1C11.7 4.6 13.4 3.7 15.4 4c3.6.5 5.2 4.3 3.6 7.8C16.5 16.4 12 21 12 21z" stroke="#fff" stroke-width="1.6" fill="none"/></svg></div>
+      <div class="brand-text">Checking in with myself<small>Diario emocional privado</small></div>
+    </div>
+    <div class="hud-center">
+      <div class="hud-name">Clara Ortega</div>
+      <div class="hud-msg">Te sientas bien o mal tu niño te querrá siempre</div>
+    </div>
+    <div class="hud-right">
+      <div class="sync-chip"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">sincronizado</span></div>
+      <div class="user-chip"><img id="userPhoto" src="" alt=""><span id="userName"></span></div>
+      <button class="logout-btn" id="logoutBtn">Salir</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="hoy">Hoy</button>
+    <button class="tab" data-tab="pensamientos">Pensamientos</button>
+    <button class="tab" data-tab="ejercicio">Ejercicio</button>
+    <button class="tab" data-tab="alimentacion">Alimentación</button>
+    <button class="tab" data-tab="calendario">Calendario</button>
+    <button class="tab" data-tab="feliz">Lo que me hace feliz</button>
+    <button class="tab" data-tab="configuracion">Configuración</button>
+  </div>
+
+  <main>
+    <!-- ===== HOY ===== -->
+    <section id="tab-hoy" class="panel">
+      <div class="section-head">
+        <div class="date-display" id="todayDateDisplay"></div>
+        <div class="date-sub">Registro del día · se guarda automáticamente</div>
+      </div>
+
+      <div class="card-block c-mint" id="moodCard">
+        <span class="field-label">¿Cómo te sientes hoy? · elige uno o varios</span>
+        <div id="moodCategories"></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card-block c-amber">
+          <span class="field-label">Estado · de 1 a 10</span>
+          <div class="slider-block">
+            <div class="slider-block-head"><span class="name">Energía</span><span class="val" id="energyVal">5</span></div>
+            <div class="slider-row"><input type="range" id="energySlider" min="1" max="10" value="5" style="--c:var(--amber)"></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-block-head"><span class="name">Ánimo</span><span class="val" id="animoVal">5</span></div>
+            <div class="slider-row"><input type="range" id="animoSlider" min="1" max="10" value="5" style="--c:var(--amber)"></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-block-head"><span class="name">Irritación</span><span class="val" id="irritacionVal">5</span></div>
+            <div class="slider-row"><input type="range" id="irritacionSlider" min="1" max="10" value="5" style="--c:var(--amber)"></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-block-head"><span class="name">Ansiedad</span><span class="val" id="ansiedadVal">5</span></div>
+            <div class="slider-row"><input type="range" id="ansiedadSlider" min="1" max="10" value="5" style="--c:var(--amber)"></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-block-head"><span class="name">Somnolencia</span><span class="val" id="somnolenciaVal">5</span></div>
+            <div class="slider-row"><input type="range" id="somnolenciaSlider" min="1" max="10" value="5" style="--c:var(--amber)"></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-block-head"><span class="name">Agobio</span><span class="val" id="agobioVal">5</span></div>
+            <div class="slider-row"><input type="range" id="agobioSlider" min="1" max="10" value="5" style="--c:var(--amber)"></div>
+          </div>
+        </div>
+        <div class="card-block c-sky">
+          <span class="field-label">Sueño</span>
+          <div class="slider-block">
+            <div class="slider-block-head"><span class="name">Nocturno</span><span class="val" id="sleepNightVal">7 h</span></div>
+            <div class="slider-row"><input type="range" id="sleepNightSlider" min="0" max="11" value="7" step="0.5" style="--c:var(--sky)"></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-block-head"><span class="name">De mañana</span><span class="val" id="sleepMorningVal">0 h</span></div>
+            <div class="slider-row"><input type="range" id="sleepMorningSlider" min="0" max="2" value="0" step="0.25" style="--c:var(--sky)"></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-block-head"><span class="name">Siesta</span><span class="val" id="sleepNapVal">0 h</span></div>
+            <div class="slider-row"><input type="range" id="sleepNapSlider" min="0" max="3" value="0" step="0.5" style="--c:var(--sky)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-block c-peach" style="margin-top:16px;">
+        <span class="field-label">Notas del día — sucesos, disparadores, lo que quieras dejar por escrito</span>
+        <textarea id="dayNotes" placeholder="Escribe aquí lo que ha pasado hoy y cómo te ha hecho sentir…"></textarea>
+      </div>
+
+      <div class="save-note"><span id="lastSavedLabel">Todo guardado</span></div>
+    </section>
+
+    <!-- ===== PENSAMIENTOS ===== -->
+    <section id="tab-pensamientos" class="panel hidden">
+      <div class="section-head">
+        <h2>Tabla de pensamientos</h2>
+        <div class="sub">Anota el pensamiento intrusivo tal como aparece, y a su lado la respuesta lógica que lo contrarresta.</div>
+      </div>
+      <div id="thoughtsWrap"></div>
+      <button class="btn-add" id="addThoughtBtn"><span class="plus">+</span> Añadir pensamiento</button>
+    </section>
+
+    <!-- ===== EJERCICIO ===== -->
+    <section id="tab-ejercicio" class="panel hidden">
+      <div class="section-head">
+        <h2>Ejercicio de hoy</h2>
+        <div class="sub">Cinta, bici elíptica o natación — y fuerza, si algún día quieres empezar.</div>
+      </div>
+
+      <div class="card-block c-sky">
+        <span class="field-label">Tipo de cardio</span>
+        <div class="ex-type-grid" id="exTypeGrid"></div>
+
+        <div class="ex-duration-wrap hidden" id="exDurationWrap">
+          <div class="slider-block">
+            <div class="slider-block-head"><span class="name">Duración</span><span class="val" id="exDurationVal">0 min</span></div>
+            <div class="slider-row"><input type="range" id="exDurationSlider" min="0" max="120" step="5" value="0" style="--c:var(--sky)"></div>
+          </div>
+          <span class="field-label" style="margin-top:14px;">¿Cómo te sentiste?</span>
+          <div class="ex-feel-row" id="exFeelRow">
+            <button class="ex-feel-btn" data-feel="energia">🙂<span class="lbl">Con energía</span></button>
+            <button class="ex-feel-btn" data-feel="normal">😐<span class="lbl">Normal</span></button>
+            <button class="ex-feel-btn" data-feel="costo">😓<span class="lbl">Costó</span></button>
+            <button class="ex-feel-btn" data-feel="agotada">😩<span class="lbl">Agotada</span></button>
+          </div>
+          <span class="field-label" style="margin-top:14px;">Notas</span>
+          <textarea id="exNotes" placeholder="Ritmo, distancia, cómo te sentiste al terminar…"></textarea>
+        </div>
+      </div>
+
+      <div class="card-block c-lilac" style="margin-top:16px;">
+        <div class="strength-toggle" id="strengthToggle">
+          <div class="chk" id="strengthChk"></div>
+          <span>Añadir entrenamiento de fuerza (opcional)</span>
+        </div>
+        <div id="strengthBlock" class="hidden">
+          <div class="strength-head">
+            <span class="field-label" style="margin:0;">Ejercicio</span>
+            <span class="rlabel">Series</span><span class="rlabel">Reps</span><span class="rlabel">Peso</span><span></span>
+          </div>
+          <div class="strength-rows" id="strengthRows"></div>
+          <button class="btn-add" id="addStrengthBtn"><span class="plus">+</span> Añadir ejercicio</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ALIMENTACIÓN Y ESTÓMAGO ===== -->
+    <section id="tab-alimentacion" class="panel hidden">
+      <div class="section-head">
+        <h2>Alimentación y estómago</h2>
+        <div class="sub">Qué has comido a lo largo del día y cómo ha respondido tu estómago.</div>
+      </div>
+
+      <div class="card-block c-amber">
+        <span class="field-label">¿Qué has comido hoy?</span>
+        <div class="food-meals" id="foodMeals"></div>
+      </div>
+
+      <div class="card-block c-coral" style="margin-top:16px;">
+        <span class="field-label">Síntomas de estómago</span>
+        <div class="mood-grid" id="stomachSymptomsGrid"></div>
+
+        <div class="slider-block" style="margin-top:18px;">
+          <div class="slider-block-head"><span class="name">Malestar general de estómago</span><span class="val" id="stomachIntensityVal">0</span></div>
+          <div class="slider-row"><input type="range" id="stomachIntensitySlider" min="0" max="10" step="1" value="0" style="--c:var(--coral)"></div>
+        </div>
+
+        <span class="field-label" style="margin-top:14px;">Más detalles (horas, qué lo desencadenó, cuánto duró…)</span>
+        <textarea id="stomachNotes" placeholder="Ej: náuseas después de comer, sobre las 16h, se me pasó en una hora…"></textarea>
+      </div>
+    </section>
+
+    <!-- ===== CALENDARIO ===== -->
+    <section id="tab-calendario" class="panel hidden">
+      <div class="section-head">
+        <h2>Calendario</h2>
+        <div class="sub">Cada día se archiva automáticamente con lo que hayas registrado.</div>
+      </div>
+      <div class="cal-head">
+        <div class="cal-nav">
+          <button id="calPrev">‹</button>
+          <div class="cal-title" id="calTitle"></div>
+          <button id="calNext">›</button>
+        </div>
+        <button class="cal-today-btn" id="calTodayBtn">Hoy</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legend-mini" id="calLegendMini"></div>
+      <div class="cal-detail hidden" id="calDetail">
+        <div class="cal-detail-head"><h3 id="calDetailDate"></h3></div>
+        <div class="cal-detail-grid" id="calDetailGrid"></div>
+      </div>
+    </section>
+
+    <!-- ===== FELIZ ===== -->
+    <section id="tab-feliz" class="panel hidden">
+      <div class="section-head">
+        <h2>Lo que me hace feliz</h2>
+        <div class="sub">Ideas propias para salir de la rutina y volver a ellas cuando hagan falta.</div>
+      </div>
+      <div class="happy-cats" id="happyCats"></div>
+    </section>
+
+    <!-- ===== CONFIGURACIÓN ===== -->
+    <section id="tab-configuracion" class="panel hidden">
+      <div class="section-head">
+        <h2>Configuración</h2>
+        <div class="sub">Ajustes de la app y gestión de tus datos.</div>
+      </div>
+      <div class="card-block c-sky" style="margin-bottom:16px;">
+        <h3 style="font-family:var(--font-display);font-style:italic;font-size:16px;margin:0 0 6px;">Copia de seguridad del archivo</h3>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0 0 16px;">Descarga este archivo .html para guardarlo en tu ordenador o modificarlo cuando quieras. Ten en cuenta que descarga la app en sí (el diseño y el código), no tus registros guardados — esos viven en este navegador.</p>
+        <button class="btn-add" id="downloadHtmlBtn" style="margin-top:0;"><span class="plus">⬇</span> Descargar archivo .html</button>
+      </div>
+      <div class="danger-box">
+        <h3>Borrar todo el progreso</h3>
+        <p>Esto elimina permanentemente todos tus registros diarios, pensamientos, ejercicio y lo que te hace feliz. No se puede deshacer.</p>
+        <button class="btn-danger" id="resetProgressBtn">Borrar todo el progreso</button>
+        <div class="reset-confirm" id="resetConfirmBox">
+          <p>¿Seguro? Se borrará todo de forma permanente.</p>
+          <div class="row">
+            <button class="btn-danger" id="resetConfirmYes">Sí, borrar todo</button>
+            <button class="btn-secondary" id="resetConfirmNo">Cancelar</button>
+          </div>
+        </div>
+        <div class="reset-done" id="resetDoneMsg">Todo el progreso se ha borrado.</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* =========================================================================
+   CHECKING IN WITH MYSELF — app.js
+   ------------------------------------------------------------------------
+   1) Rellena FIREBASE_CONFIG con la configuración de tu proyecto Firebase.
+   2) En la consola de Firebase > Authentication > Sign-in method, activa
+      "Google" como proveedor.
+   3) Los dos correos autorizados están en ALLOWED_EMAILS más abajo.
+   4) En Firestore, crea la base de datos en modo producción y usa las
+      reglas de seguridad incluidas al final de este archivo (en comentario).
+   ========================================================================= */
+
+const FIREBASE_CONFIG = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROYECTO.firebaseapp.com",
+  projectId: "TU_PROYECTO",
+  storageBucket: "TU_PROYECTO.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+
+const ALLOWED_EMAILS = [
+  "claraortega1855@gmail.com",
+  "ramossanchezsantiago2000@gmail.com"
+];
+
+// Documento compartido: ambas cuentas autorizadas leen y escriben el mismo diario.
+const FIRESTORE_COLLECTION = "checkingInWithMyself";
+const FIRESTORE_DOC = "sharedJournal";
+
+let firebaseAvailable = true;
+let auth = null;
+let db = null;
+try{
+  if(typeof firebase === 'undefined') throw new Error('El SDK de Firebase no se ha cargado (sin conexión, o faltan los scripts de firebase en el HTML).');
+  firebase.initializeApp(FIREBASE_CONFIG);
+  auth = firebase.auth();
+  db = firebase.firestore();
+  db.enablePersistence({ synchronizeTabs: true }).catch(()=>{ /* varias pestañas abiertas: ignorar */ });
+}catch(err){
+  console.error('Firebase no disponible:', err);
+  firebaseAvailable = false;
+}
+
+/* ================= MOOD DEFINITIONS ================= */
+const MOOD_CATEGORIES = [
+  { id: "positivo", color: "var(--mint)", card:"c-mint", label: "Positivo",
+    moods: ["Feliz","Orgullosa","Alegre","Agradecida","Optimista","Motivada","Animada","Relajada","Alivio","Cariñosa","Inspirada","Con energía","Satisfecha","Esperanzada"] },
+  { id: "dificil", color: "var(--coral)", card:"c-coral", label: "Difícil",
+    moods: ["Triste","Enojada","Deprimida","Disgustada","Perdida","Frustrada","Decepcionada","Culpable","Avergonzada","Sola","Rechazada","Odio"] },
+  { id: "ansiedad", color: "var(--amber)", card:"c-amber", label: "Ansiedad / estrés",
+    moods: ["Ansiosa","Agobiada","Irritada","Insegura","Confundida","Nerviosa","Tensa","Preocupada","Abrumada","Impaciente"] },
+  { id: "cansancio", color: "var(--lilac)", card:"c-lilac", label: "Cansancio",
+    moods: ["Somnolienta","Aburrida","Cansada","Sin energía","Desmotivada"] },
+  { id: "neutral", color: "var(--sky)", card:"c-sky", label: "Neutral",
+    moods: ["Neutral","Pensativa","Tranquila","Indiferente"] }
+];
+function moodColor(name){
+  for(const cat of MOOD_CATEGORIES){ if(cat.moods.includes(name)) return cat.color; }
+  return "var(--sky)";
+}
+
+const EX_TYPES = [
+  { id:"Cinta", emoji:"🏃‍♀️" },
+  { id:"Bici elíptica", emoji:"🚴‍♀️" },
+  { id:"Natación", emoji:"🏊‍♀️" },
+  { id:"Otro", emoji:"✨" },
+  { id:"Descanso", emoji:"💤" }
+];
+
+/* ================= STATE ================= */
+function defaultState(){
+  return {
+    days: {},       // "YYYY-MM-DD" -> { moods:[], energy, sleepNight, sleepMorning, sleepNap, notes, exercise:{}, strength:[] }
+    thoughts: [],    // { id, date, intrusive, logical }
+    happy: {
+      "Actividades": [],
+      "Autocuidado": [],
+      "Personas y lugares": []
+    },
+    updatedAt: null
+  };
+}
+let state = defaultState();
+let currentUser = null;
+let saveTimer = null;
+let suppressSave = false;
+
+function todayStr(d){
+  d = d || new Date();
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+function ensureDay(dateStr){
+  if(!state.days[dateStr]){
+    state.days[dateStr] = { moods:[], energy:5, animo:5, irritacion:5, ansiedad:5, somnolencia:5, agobio:5, sleepNight:7, sleepMorning:0, sleepNap:0, notes:"", exercise:{}, strength:[], food:{}, stomach:{symptoms:[], intensity:0, notes:""} };
+  }
+  const d = state.days[dateStr];
+  if(d.sleepNight === undefined) d.sleepNight = d.sleep !== undefined ? d.sleep : 7;
+  if(d.sleepMorning === undefined) d.sleepMorning = 0;
+  if(d.sleepNap === undefined) d.sleepNap = 0;
+  if(d.animo === undefined) d.animo = 5;
+  if(d.irritacion === undefined) d.irritacion = 5;
+  if(d.ansiedad === undefined) d.ansiedad = 5;
+  if(d.somnolencia === undefined) d.somnolencia = 5;
+  if(d.agobio === undefined) d.agobio = 5;
+  if(!d.exercise) d.exercise = {};
+  if(!d.strength) d.strength = [];
+  if(!d.food) d.food = {};
+  if(!d.stomach) d.stomach = { symptoms:[], intensity:0, notes:"" };
+  if(!d.stomach.symptoms) d.stomach.symptoms = [];
+  if(d.stomach.intensity === undefined) d.stomach.intensity = 0;
+  if(d.stomach.notes === undefined) d.stomach.notes = "";
+  return d;
+}
+function esc(str){
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function autoResize(el){
+  if(!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+/* ================= AUTH (Google Sign-In restringido a ALLOWED_EMAILS) ================= */
+const loginScreen = document.getElementById('loginScreen');
+const appRoot = document.getElementById('app');
+const loginError = document.getElementById('loginError');
+const loginLoading = document.getElementById('loginLoading');
+let unsubscribeSnapshot = null;
+let hasPendingLocalChange = false;
+let pendingSyncNeeded = false;
+const LOCAL_BACKUP_KEY = 'checkingIn_local_backup_v1';
+
+if(!firebaseAvailable){
+  loginError.textContent = 'No se ha podido cargar Firebase (sin conexión a internet, o el script de Firebase no se ha subido junto al resto de archivos). Revisa tu conexión y recarga la página.';
+  loginError.classList.add('show');
+  document.getElementById('googleSignInBtn').disabled = true;
+}
+
+document.getElementById('googleSignInBtn').addEventListener('click', ()=>{
+  if(!firebaseAvailable) return;
+  loginError.classList.remove('show');
+  loginLoading.classList.add('show');
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err=>{
+    loginLoading.classList.remove('show');
+    loginError.textContent = 'No se pudo iniciar sesión: ' + err.message;
+    loginError.classList.add('show');
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  if(!firebaseAvailable) return;
+  auth.signOut();
+});
+
+if(firebaseAvailable){
+auth.onAuthStateChanged(user=>{
+  loginLoading.classList.remove('show');
+  if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+
+  if(user){
+    const email = (user.email || '').toLowerCase();
+    const allowed = ALLOWED_EMAILS.map(e=>e.toLowerCase()).includes(email);
+    if(!allowed){
+      loginError.textContent = 'Esta cuenta (' + user.email + ') no tiene acceso a esta app. Inicia sesión con una de las dos cuentas autorizadas.';
+      loginError.classList.add('show');
+      auth.signOut();
+      return;
+    }
+    currentUser = user;
+    loginScreen.style.display = 'none';
+    appRoot.classList.add('show');
+    const photo = document.getElementById('userPhoto');
+    if(user.photoURL){ photo.src = user.photoURL; photo.style.display = ''; } else { photo.style.display = 'none'; }
+    document.getElementById('userName').textContent = user.displayName || user.email;
+    startFirestoreSync();
+  } else {
+    currentUser = null;
+    appRoot.classList.remove('show');
+    loginScreen.style.display = 'flex';
+  }
+});
+}
+
+/* ================= GUARDADO (Firestore + copia de seguridad local) =================
+   - Al abrir: se pinta al instante lo último guardado en este navegador
+     (localStorage), y en cuanto llega la respuesta de Firestore, esa pasa
+     a mandar (así nunca se ve una pantalla vacía mientras carga).
+   - Al guardar: se escribe primero en localStorage (copia de seguridad
+     inmediata e instantánea) y luego en Firestore (sincroniza con el
+     otro dispositivo). Si Firestore falla o no hay conexión, la copia
+     local ya está a salvo y se reintentará sola en cuanto haya red.
+   - Mientras el usuario tiene un cambio sin guardar todavía, se ignora
+     cualquier dato que llegue de Firestore para no pisarlo a medio escribir. */
+function journalRef(){
+  return db.collection(FIRESTORE_COLLECTION).doc(FIRESTORE_DOC);
+}
+function applyIncomingState(data){
+  const d = defaultState();
+  suppressSave = true;
+  state = Object.assign(d, data, {
+    days: Object.assign({}, data.days || {}),
+    thoughts: data.thoughts || [],
+    happy: Object.assign(d.happy, data.happy || {})
+  });
+  suppressSave = false;
+  // Mantener la copia local siempre al día, aunque el dato venga de
+  // Firestore y no de una edición propia — así, si luego se abre la
+  // app sin conexión, hay algo reciente que mostrar.
+  try{ localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(state)); }catch(e){}
+  render();
+}
+function startFirestoreSync(){
+  setSync('saving', 'cargando…');
+  // Pintado instantáneo con la última copia local, por si tarda la red.
+  try{
+    const cached = localStorage.getItem(LOCAL_BACKUP_KEY);
+    if(cached) applyIncomingState(JSON.parse(cached));
+  }catch(e){ /* copia local corrupta o inexistente: se ignora */ }
+
+  unsubscribeSnapshot = journalRef().onSnapshot(snap=>{
+    if(hasPendingLocalChange) return; // hay un cambio sin guardar: no lo pisamos
+    if(snap.exists){
+      applyIncomingState(snap.data() || {});
+    } else if(!localStorage.getItem(LOCAL_BACKUP_KEY)){
+      state = defaultState();
+      render();
+    }
+    setSync('idle', 'sincronizado');
+  }, err=>{
+    console.error(err);
+    setSync('idle', 'sin conexión — usando copia local');
+  });
+}
+
+function scheduleSave(){
+  if(suppressSave) return;
+  hasPendingLocalChange = true;
+  setSync('saving', 'guardando…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 500);
+}
+function doSave(){
+  state.updatedAt = Date.now();
+  // 1) copia de seguridad local inmediata, siempre, pase lo que pase con la red.
+  try{ localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(state)); }catch(e){ console.error('No se pudo guardar copia local', e); }
+  // 2) sincronización con Firestore (si está disponible).
+  if(!firebaseAvailable){
+    hasPendingLocalChange = false;
+    setSync('idle', 'guardado en copia local (sin Firebase)');
+    document.getElementById('lastSavedLabel').textContent = 'Guardado localmente a las ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    return;
+  }
+  journalRef().set(state).then(()=>{
+    hasPendingLocalChange = false;
+    pendingSyncNeeded = false;
+    setSync('idle', 'sincronizado');
+    document.getElementById('lastSavedLabel').textContent = 'Guardado a las ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  }).catch(err=>{
+    console.error(err);
+    hasPendingLocalChange = false;
+    pendingSyncNeeded = true; // hay que reintentar en cuanto vuelva la conexión
+    setSync('idle', 'sin conexión — guardado en copia local');
+    document.getElementById('lastSavedLabel').textContent = 'Guardado localmente (sin conexión) a las ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  });
+}
+
+function setSync(mode, label){
+  const dot = document.getElementById('syncDot');
+  const lab = document.getElementById('syncLabel');
+  dot.className = 'sync-dot' + (mode==='saving' ? ' saving' : '');
+  lab.textContent = label;
+}
+
+// Red de seguridad extra: en cuanto el navegador detecta que ha vuelto la
+// conexión, si se quedó algún guardado pendiente por hacer (falló por estar
+// offline), se reintenta enviarlo a Firestore automáticamente.
+window.addEventListener('online', ()=>{
+  if(firebaseAvailable && pendingSyncNeeded) doSave();
+});
+
+/* ================= TABS ================= */
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    ['hoy','pensamientos','ejercicio','alimentacion','calendario','feliz','configuracion'].forEach(t=>{
+      document.getElementById('tab-'+t).classList.toggle('hidden', t !== btn.dataset.tab);
+    });
+    if(btn.dataset.tab === 'calendario') renderCalendario();
+  });
+});
+
+/* ================= HOY ================= */
+function renderHoy(){
+  const dateStr = todayStr();
+  const day = ensureDay(dateStr);
+  document.getElementById('todayDateDisplay').textContent =
+    new Date().toLocaleDateString('es-ES',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+  const wrap = document.getElementById('moodCategories');
+  wrap.innerHTML = MOOD_CATEGORIES.map(cat=>`
+    <div class="mood-cat-block">
+      <div class="mood-cat-title"><span class="dot" style="background:${cat.color}"></span>${cat.label}</div>
+      <div class="mood-grid" data-cat="${cat.id}"></div>
+    </div>`).join('');
+
+  MOOD_CATEGORIES.forEach(cat=>{
+    const grid = wrap.querySelector(`.mood-grid[data-cat="${cat.id}"]`);
+    cat.moods.forEach(m=>{
+      const active = day.moods.includes(m);
+      const b = document.createElement('button');
+      b.className = 'mood-btn' + (active ? ' active' : '');
+      b.style.setProperty('--c', cat.color);
+      b.innerHTML = `<span class="dot"></span>${m}`;
+      b.addEventListener('click', ()=>{
+        const idx = day.moods.indexOf(m);
+        if(idx>-1) day.moods.splice(idx,1); else day.moods.push(m);
+        scheduleSave();
+        renderHoy();
+        renderCalendario();
+      });
+      grid.appendChild(b);
+    });
+  });
+
+  document.getElementById('energySlider').value = day.energy;
+  document.getElementById('energyVal').textContent = day.energy;
+  document.getElementById('animoSlider').value = day.animo;
+  document.getElementById('animoVal').textContent = day.animo;
+  document.getElementById('irritacionSlider').value = day.irritacion;
+  document.getElementById('irritacionVal').textContent = day.irritacion;
+  document.getElementById('ansiedadSlider').value = day.ansiedad;
+  document.getElementById('ansiedadVal').textContent = day.ansiedad;
+  document.getElementById('somnolenciaSlider').value = day.somnolencia;
+  document.getElementById('somnolenciaVal').textContent = day.somnolencia;
+  document.getElementById('agobioSlider').value = day.agobio;
+  document.getElementById('agobioVal').textContent = day.agobio;
+  document.getElementById('sleepNightSlider').value = day.sleepNight;
+  document.getElementById('sleepNightVal').textContent = day.sleepNight + ' h';
+  document.getElementById('sleepMorningSlider').value = day.sleepMorning;
+  document.getElementById('sleepMorningVal').textContent = day.sleepMorning + ' h';
+  document.getElementById('sleepNapSlider').value = day.sleepNap;
+  document.getElementById('sleepNapVal').textContent = day.sleepNap + ' h';
+  document.getElementById('dayNotes').value = day.notes || '';
+  autoResize(document.getElementById('dayNotes'));
+}
+document.getElementById('energySlider').addEventListener('input', e=>{
+  document.getElementById('energyVal').textContent = e.target.value;
+  ensureDay(todayStr()).energy = Number(e.target.value);
+  scheduleSave();
+});
+document.getElementById('animoSlider').addEventListener('input', e=>{
+  document.getElementById('animoVal').textContent = e.target.value;
+  ensureDay(todayStr()).animo = Number(e.target.value);
+  scheduleSave();
+});
+document.getElementById('irritacionSlider').addEventListener('input', e=>{
+  document.getElementById('irritacionVal').textContent = e.target.value;
+  ensureDay(todayStr()).irritacion = Number(e.target.value);
+  scheduleSave();
+});
+document.getElementById('ansiedadSlider').addEventListener('input', e=>{
+  document.getElementById('ansiedadVal').textContent = e.target.value;
+  ensureDay(todayStr()).ansiedad = Number(e.target.value);
+  scheduleSave();
+});
+document.getElementById('somnolenciaSlider').addEventListener('input', e=>{
+  document.getElementById('somnolenciaVal').textContent = e.target.value;
+  ensureDay(todayStr()).somnolencia = Number(e.target.value);
+  scheduleSave();
+});
+document.getElementById('agobioSlider').addEventListener('input', e=>{
+  document.getElementById('agobioVal').textContent = e.target.value;
+  ensureDay(todayStr()).agobio = Number(e.target.value);
+  scheduleSave();
+});
+document.getElementById('sleepNightSlider').addEventListener('input', e=>{
+  document.getElementById('sleepNightVal').textContent = e.target.value + ' h';
+  ensureDay(todayStr()).sleepNight = Number(e.target.value);
+  scheduleSave(); renderCalendario();
+});
+document.getElementById('sleepMorningSlider').addEventListener('input', e=>{
+  document.getElementById('sleepMorningVal').textContent = e.target.value + ' h';
+  ensureDay(todayStr()).sleepMorning = Number(e.target.value);
+  scheduleSave(); renderCalendario();
+});
+document.getElementById('sleepNapSlider').addEventListener('input', e=>{
+  document.getElementById('sleepNapVal').textContent = e.target.value + ' h';
+  ensureDay(todayStr()).sleepNap = Number(e.target.value);
+  scheduleSave(); renderCalendario();
+});
+document.getElementById('dayNotes').addEventListener('input', e=>{
+  ensureDay(todayStr()).notes = e.target.value;
+  autoResize(e.target);
+  scheduleSave();
+  renderCalendario();
+});
+
+/* ================= PENSAMIENTOS ================= */
+function renderPensamientos(){
+  const wrap = document.getElementById('thoughtsWrap');
+  if(!state.thoughts.length){
+    wrap.innerHTML = `<div class="empty-state">Todavía no hay pensamientos anotados.<br>Usa "Añadir pensamiento" para empezar.</div>`;
+    return;
+  }
+  const rows = state.thoughts.slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'')).map(t=>`
+    <tr data-id="${t.id}">
+      <td class="col-date">
+        <input type="text" class="th-date" value="${esc(t.date)}" placeholder="AAAA-MM-DD" style="width:100%;font-family:var(--font-mono);font-size:11px;padding:6px 8px;background:#fff;">
+      </td>
+      <td class="cell-intrusive"><textarea class="th-intrusive" placeholder="Pensamiento intrusivo…">${esc(t.intrusive)}</textarea></td>
+      <td class="cell-logical"><textarea class="th-logical" placeholder="Respuesta lógica…">${esc(t.logical)}</textarea></td>
+      <td class="col-del"><button class="row-del" title="Eliminar">✕</button></td>
+    </tr>`).join('');
+  wrap.innerHTML = `
+    <table class="thoughts-table">
+      <thead><tr>
+        <th>Fecha</th><th>Pensamiento intrusivo</th><th>Pensamiento lógico</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  wrap.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const id = tr.dataset.id;
+    const item = state.thoughts.find(t=>t.id===id);
+    const taIntrusive = tr.querySelector('.th-intrusive');
+    const taLogical = tr.querySelector('.th-logical');
+    autoResize(taIntrusive);
+    autoResize(taLogical);
+    tr.querySelector('.th-date').addEventListener('input', e=>{ item.date = e.target.value; scheduleSave(); renderCalendario(); });
+    taIntrusive.addEventListener('input', e=>{ item.intrusive = e.target.value; autoResize(e.target); scheduleSave(); });
+    taLogical.addEventListener('input', e=>{ item.logical = e.target.value; autoResize(e.target); scheduleSave(); });
+    tr.querySelector('.row-del').addEventListener('click', ()=>{
+      state.thoughts = state.thoughts.filter(t=>t.id!==id);
+      scheduleSave(); renderPensamientos(); renderCalendario();
+    });
+  });
+}
+document.getElementById('addThoughtBtn').addEventListener('click', ()=>{
+  state.thoughts.push({ id: uid(), date: todayStr(), intrusive:'', logical:'' });
+  scheduleSave();
+  renderPensamientos();
+  renderCalendario();
+});
+
+/* ================= EJERCICIO ================= */
+function renderEjercicio(){
+  const day = ensureDay(todayStr());
+  const grid = document.getElementById('exTypeGrid');
+  grid.innerHTML = '';
+  EX_TYPES.forEach(ex=>{
+    const card = document.createElement('button');
+    card.className = 'ex-type-card' + (day.exercise.type === ex.id ? ' active' : '');
+    card.innerHTML = `<span class="emoji">${ex.emoji}</span><span class="name">${ex.id}</span>`;
+    card.addEventListener('click', ()=>{
+      day.exercise.type = (day.exercise.type === ex.id) ? '' : ex.id;
+      scheduleSave();
+      renderEjercicio();
+      renderCalendario();
+    });
+    grid.appendChild(card);
+  });
+
+  const showDuration = day.exercise.type && day.exercise.type !== 'Descanso';
+  document.getElementById('exDurationWrap').classList.toggle('hidden', !showDuration);
+  if(showDuration){
+    document.getElementById('exDurationSlider').value = day.exercise.duration || 0;
+    document.getElementById('exDurationVal').textContent = (day.exercise.duration || 0) + ' min';
+    document.getElementById('exNotes').value = day.exercise.notes || '';
+    autoResize(document.getElementById('exNotes'));
+    document.querySelectorAll('.ex-feel-btn').forEach(b=>{
+      b.classList.toggle('active', day.exercise.feeling === b.dataset.feel);
+    });
+  }
+
+  const on = !!day.exercise.strengthOn;
+  document.getElementById('strengthChk').classList.toggle('on', on);
+  document.getElementById('strengthBlock').classList.toggle('hidden', !on);
+  renderStrengthRows();
+}
+document.getElementById('exDurationSlider').addEventListener('input', e=>{
+  document.getElementById('exDurationVal').textContent = e.target.value + ' min';
+  ensureDay(todayStr()).exercise.duration = Number(e.target.value);
+  scheduleSave();
+});
+document.getElementById('exNotes').addEventListener('input', e=>{
+  ensureDay(todayStr()).exercise.notes = e.target.value;
+  autoResize(e.target);
+  scheduleSave();
+});
+document.getElementById('exFeelRow').addEventListener('click', e=>{
+  const btn = e.target.closest('.ex-feel-btn');
+  if(!btn) return;
+  const day = ensureDay(todayStr());
+  day.exercise.feeling = (day.exercise.feeling === btn.dataset.feel) ? '' : btn.dataset.feel;
+  scheduleSave();
+  renderEjercicio();
+});
+document.getElementById('strengthToggle').addEventListener('click', ()=>{
+  const day = ensureDay(todayStr());
+  day.exercise.strengthOn = !day.exercise.strengthOn;
+  scheduleSave();
+  renderEjercicio();
+});
+function renderStrengthRows(){
+  const day = ensureDay(todayStr());
+  const wrap = document.getElementById('strengthRows');
+  if(!day.strength.length){
+    wrap.innerHTML = `<div class="empty-state" style="padding:16px;">Ningún ejercicio de fuerza añadido todavía.</div>`;
+    return;
+  }
+  wrap.innerHTML = day.strength.map(s=>`
+    <div class="strength-row" data-id="${s.id}">
+      <input type="text" class="s-name" placeholder="Ejercicio" value="${esc(s.name)}">
+      <input type="number" class="s-sets" placeholder="0" value="${s.sets||''}">
+      <input type="number" class="s-reps" placeholder="0" value="${s.reps||''}">
+      <input type="text" class="s-weight" placeholder="kg" value="${esc(s.weight||'')}">
+      <button class="row-del">✕</button>
+    </div>`).join('');
+  wrap.querySelectorAll('.strength-row').forEach(row=>{
+    const id = row.dataset.id;
+    const item = day.strength.find(s=>s.id===id);
+    row.querySelector('.s-name').addEventListener('input', e=>{ item.name=e.target.value; scheduleSave(); });
+    row.querySelector('.s-sets').addEventListener('input', e=>{ item.sets=e.target.value; scheduleSave(); });
+    row.querySelector('.s-reps').addEventListener('input', e=>{ item.reps=e.target.value; scheduleSave(); });
+    row.querySelector('.s-weight').addEventListener('input', e=>{ item.weight=e.target.value; scheduleSave(); });
+    row.querySelector('.row-del').addEventListener('click', ()=>{
+      day.strength = day.strength.filter(s=>s.id!==id);
+      scheduleSave(); renderStrengthRows();
+    });
+  });
+}
+document.getElementById('addStrengthBtn').addEventListener('click', ()=>{
+  const day = ensureDay(todayStr());
+  day.strength.push({ id: uid(), name:'', sets:'', reps:'', weight:'' });
+  scheduleSave();
+  renderStrengthRows();
+});
+
+/* ================= ALIMENTACIÓN Y ESTÓMAGO ================= */
+const MEAL_TYPES = [
+  { id: 'desayuno', label: 'Desayuno' },
+  { id: 'mediaManana', label: 'Media mañana' },
+  { id: 'comida', label: 'Comida' },
+  { id: 'merienda', label: 'Merienda' },
+  { id: 'cena', label: 'Cena' },
+  { id: 'otros', label: 'Otros / picoteos' }
+];
+
+const STOMACH_SYMPTOMS = [
+  'Náuseas', 'Vómitos', 'Diarrea', 'Estreñimiento', 'Hinchazón / gases',
+  'Dolor o retortijones', 'Ardor / acidez', 'Reflujo', 'Pérdida de apetito',
+  'Digestión pesada', 'Eructos frecuentes', 'Ruidos intestinales'
+];
+
+function renderAlimentacion(){
+  const day = ensureDay(todayStr());
+
+  const mealsWrap = document.getElementById('foodMeals');
+  mealsWrap.innerHTML = MEAL_TYPES.map(m => `
+    <div class="food-meal-block">
+      <span class="meal-label">${m.label}</span>
+      <textarea data-meal="${m.id}" placeholder="¿Qué has comido en ${m.label.toLowerCase()}?"></textarea>
+    </div>`).join('');
+  mealsWrap.querySelectorAll('textarea').forEach(ta=>{
+    ta.value = day.food[ta.dataset.meal] || '';
+    autoResize(ta);
+    ta.addEventListener('input', e=>{
+      ensureDay(todayStr()).food[e.target.dataset.meal] = e.target.value;
+      autoResize(e.target);
+      scheduleSave();
+    });
+  });
+
+  const symptomsGrid = document.getElementById('stomachSymptomsGrid');
+  symptomsGrid.innerHTML = '';
+  STOMACH_SYMPTOMS.forEach(sym=>{
+    const active = day.stomach.symptoms.includes(sym);
+    const b = document.createElement('button');
+    b.className = 'mood-btn' + (active ? ' active' : '');
+    b.style.setProperty('--c', 'var(--coral)');
+    b.innerHTML = `<span class="dot"></span>${sym}`;
+    b.addEventListener('click', ()=>{
+      const d = ensureDay(todayStr());
+      const idx = d.stomach.symptoms.indexOf(sym);
+      if(idx>-1) d.stomach.symptoms.splice(idx,1); else d.stomach.symptoms.push(sym);
+      scheduleSave();
+      renderAlimentacion();
+      renderCalendario();
+    });
+    symptomsGrid.appendChild(b);
+  });
+
+  document.getElementById('stomachIntensitySlider').value = day.stomach.intensity;
+  document.getElementById('stomachIntensityVal').textContent = day.stomach.intensity;
+  document.getElementById('stomachNotes').value = day.stomach.notes || '';
+  autoResize(document.getElementById('stomachNotes'));
+}
+document.getElementById('stomachIntensitySlider').addEventListener('input', e=>{
+  document.getElementById('stomachIntensityVal').textContent = e.target.value;
+  ensureDay(todayStr()).stomach.intensity = Number(e.target.value);
+  scheduleSave();
+});
+document.getElementById('stomachNotes').addEventListener('input', e=>{
+  ensureDay(todayStr()).stomach.notes = e.target.value;
+  autoResize(e.target);
+  scheduleSave();
+});
+
+/* ================= CALENDARIO ================= */
+let calViewYear, calViewMonth, calSelectedDate = null;
+function initCalView(){
+  const n = new Date();
+  calViewYear = n.getFullYear(); calViewMonth = n.getMonth();
+}
+initCalView();
+
+function dayMoodColors(day){
+  if(!day || !day.moods || !day.moods.length) return [];
+  const uniq = [];
+  day.moods.forEach(m=>{ const c = moodColor(m); if(!uniq.includes(c)) uniq.push(c); });
+  return uniq.slice(0,4);
+}
+
+function renderCalendario(){
+  const title = document.getElementById('calTitle');
+  const monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  title.textContent = `${monthNames[calViewMonth]} ${calViewYear}`;
+
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  ['L','M','X','J','V','S','D'].forEach(d=>{
+    const el = document.createElement('div'); el.className='cal-dow'; el.textContent=d; grid.appendChild(el);
+  });
+
+  const firstDay = new Date(calViewYear, calViewMonth, 1);
+  let startOffset = firstDay.getDay() - 1; if(startOffset < 0) startOffset = 6;
+  const daysInMonth = new Date(calViewYear, calViewMonth+1, 0).getDate();
+  const todayS = todayStr();
+
+  for(let i=0;i<startOffset;i++){
+    const el = document.createElement('div'); el.className='cal-cell empty'; grid.appendChild(el);
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${calViewYear}-${String(calViewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayData = state.days[dateStr];
+    const hasThoughts = state.thoughts.some(t=>t.date===dateStr);
+    const hasEntry = !!dayData && (dayData.moods.length || (dayData.notes && dayData.notes.trim()) || (dayData.exercise && dayData.exercise.type)) || hasThoughts;
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (hasEntry ? ' has-entry' : '') + (dateStr===todayS ? ' today' : '') + (dateStr===calSelectedDate ? ' selected' : '');
+    const colors = dayMoodColors(dayData);
+    const dotsHtml = colors.length ? `<div class="cal-dots">${colors.map(c=>`<span class="cal-dot" style="background:${c}"></span>`).join('')}</div>` : '';
+    const icons = [];
+    if(dayData && dayData.exercise && dayData.exercise.type && dayData.exercise.type !== 'Descanso') icons.push('🏃');
+    if(hasThoughts) icons.push('💭');
+    const iconsHtml = icons.length ? `<div class="cal-icons">${icons.join('')}</div>` : '';
+    cell.innerHTML = `<span>${d}</span>${dotsHtml}${iconsHtml}`;
+    if(hasEntry){
+      cell.addEventListener('click', ()=>{
+        calSelectedDate = dateStr;
+        renderCalendario();
+        showCalDetail(dateStr);
+      });
+    }
+    grid.appendChild(cell);
+  }
+
+  document.getElementById('calLegendMini').innerHTML = MOOD_CATEGORIES.map(cat=>
+    `<div class="legend-item"><span class="dot" style="background:${cat.color}"></span>${cat.label}</div>`
+  ).join('');
+
+  if(calSelectedDate) showCalDetail(calSelectedDate);
+}
+function showCalDetail(dateStr){
+  const day = state.days[dateStr];
+  const dayThoughts = state.thoughts.filter(t=>t.date===dateStr);
+  const detail = document.getElementById('calDetail');
+  if(!day && !dayThoughts.length){ detail.classList.add('hidden'); return; }
+  detail.classList.remove('hidden');
+  document.getElementById('calDetailDate').textContent =
+    new Date(dateStr+'T00:00:00').toLocaleDateString('es-ES',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+  const rows = [];
+  if(day){
+    if(day.moods.length) rows.push(`<div class="cal-detail-row"><b>Estado de ánimo</b>${day.moods.join(' · ')}</div>`);
+    rows.push(`<div class="cal-detail-row"><b>Energía / sueño</b>Energía ${day.energy}/10 · ${day.sleepNight||0} h nocturno · ${day.sleepMorning||0} h mañana · ${day.sleepNap||0} h siesta</div>`);
+    rows.push(`<div class="cal-detail-row"><b>Estado (1-10)</b>Ánimo ${day.animo??5} · Irritación ${day.irritacion??5} · Ansiedad ${day.ansiedad??5} · Somnolencia ${day.somnolencia??5} · Agobio ${day.agobio??5}</div>`);
+    if(day.notes) rows.push(`<div class="cal-detail-row"><b>Notas</b>${esc(day.notes)}</div>`);
+    if(day.exercise && day.exercise.type) rows.push(`<div class="cal-detail-row"><b>Ejercicio</b>${esc(day.exercise.type)}${day.exercise.duration ? ' · '+day.exercise.duration+' min' : ''}${day.exercise.notes ? ' — '+esc(day.exercise.notes) : ''}</div>`);
+    if(day.strength && day.strength.length) rows.push(`<div class="cal-detail-row"><b>Fuerza</b>${day.strength.map(s=>esc(s.name)+(s.sets?` (${s.sets}x${s.reps||'?'}${s.weight?' · '+esc(s.weight):''})`:'')).join(', ')}</div>`);
+    if(day.food && MEAL_TYPES.some(m=>day.food[m.id])){
+      rows.push(`<div class="cal-detail-row"><b>Comidas</b>` +
+        MEAL_TYPES.filter(m=>day.food[m.id]).map(m=>`<div style="margin-bottom:4px;"><i>${m.label}:</i> ${esc(day.food[m.id])}</div>`).join('') +
+        `</div>`);
+    }
+    if(day.stomach && (day.stomach.symptoms.length || day.stomach.intensity || day.stomach.notes)){
+      rows.push(`<div class="cal-detail-row"><b>Estómago</b>${day.stomach.symptoms.length ? day.stomach.symptoms.join(' · ')+' · ' : ''}Malestar ${day.stomach.intensity||0}/10${day.stomach.notes ? ' — '+esc(day.stomach.notes) : ''}</div>`);
+    }
+  }
+  if(dayThoughts.length){
+    rows.push(`<div class="cal-detail-row"><b>Pensamientos</b>` +
+      dayThoughts.map(t=>`<div style="margin-bottom:8px;"><i>${esc(t.intrusive)}</i><br>→ ${esc(t.logical)}</div>`).join('') +
+      `</div>`);
+  }
+  document.getElementById('calDetailGrid').innerHTML = rows.join('') || `<div class="empty-state">Sin registro ese día.</div>`;
+}
+document.getElementById('calPrev').addEventListener('click', ()=>{
+  calViewMonth--; if(calViewMonth<0){calViewMonth=11; calViewYear--;}
+  renderCalendario();
+});
+document.getElementById('calNext').addEventListener('click', ()=>{
+  calViewMonth++; if(calViewMonth>11){calViewMonth=0; calViewYear++;}
+  renderCalendario();
+});
+document.getElementById('calTodayBtn').addEventListener('click', ()=>{
+  const n = new Date(); calViewYear=n.getFullYear(); calViewMonth=n.getMonth();
+  calSelectedDate = todayStr();
+  renderCalendario();
+});
+
+/* ================= FELIZ ================= */
+const HAPPY_CARD_CLASSES = ['c-mint','c-amber','c-lilac','c-sky','c-coral','c-peach'];
+function renderFeliz(){
+  const wrap = document.getElementById('happyCats');
+  wrap.innerHTML = Object.keys(state.happy).map((cat,i)=>`
+    <div class="happy-cat card-block ${HAPPY_CARD_CLASSES[i % HAPPY_CARD_CLASSES.length]}" data-cat="${esc(cat)}">
+      <h3>${esc(cat)}</h3>
+      <div class="happy-list"></div>
+      <button class="btn-add add-happy"><span class="plus">+</span> Añadir</button>
+    </div>`).join('');
+
+  Object.keys(state.happy).forEach(cat=>{
+    const catEl = wrap.querySelector(`[data-cat="${cssEscape(cat)}"] .happy-list`);
+    renderHappyList(cat, catEl);
+  });
+  wrap.querySelectorAll('.add-happy').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const cat = btn.closest('.happy-cat').dataset.cat;
+      state.happy[cat].push({ id: uid(), text: '' });
+      scheduleSave();
+      renderFeliz();
+    });
+  });
+}
+function cssEscape(s){ return s.replace(/"/g,'\\"'); }
+function renderHappyList(cat, el){
+  const items = state.happy[cat];
+  if(!items.length){ el.innerHTML = `<div class="empty-state" style="padding:14px;">Nada añadido todavía.</div>`; return; }
+  el.innerHTML = items.map(it=>`
+    <div class="happy-item" data-id="${it.id}">
+      <textarea rows="1" placeholder="Escribe algo que te haga feliz…">${esc(it.text)}</textarea>
+      <button class="row-del">✕</button>
+    </div>`).join('');
+  el.querySelectorAll('.happy-item').forEach(row=>{
+    const id = row.dataset.id;
+    const item = items.find(i=>i.id===id);
+    const ta = row.querySelector('textarea');
+    autoResize(ta);
+    ta.addEventListener('input', e=>{ item.text = e.target.value; autoResize(ta); scheduleSave(); });
+    row.querySelector('.row-del').addEventListener('click', ()=>{
+      state.happy[cat] = state.happy[cat].filter(i=>i.id!==id);
+      scheduleSave(); renderFeliz();
+    });
+  });
+}
+
+/* ================= CONFIGURACIÓN ================= */
+document.getElementById('downloadHtmlBtn').addEventListener('click', ()=>{
+  const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'checking-in-with-myself.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+const resetBtn = document.getElementById('resetProgressBtn');
+const resetConfirmBox = document.getElementById('resetConfirmBox');
+const resetDoneMsg = document.getElementById('resetDoneMsg');
+resetBtn.addEventListener('click', ()=>{
+  resetDoneMsg.classList.remove('show');
+  resetConfirmBox.classList.add('show');
+});
+document.getElementById('resetConfirmNo').addEventListener('click', ()=>{
+  resetConfirmBox.classList.remove('show');
+});
+document.getElementById('resetConfirmYes').addEventListener('click', ()=>{
+  state = defaultState();
+  doSave();
+  resetConfirmBox.classList.remove('show');
+  resetDoneMsg.classList.add('show');
+  calSelectedDate = null;
+  render();
+});
+
+/* ================= MASTER RENDER ================= */
+function render(){
+  renderHoy();
+  renderPensamientos();
+  renderEjercicio();
+  renderAlimentacion();
+  renderCalendario();
+  renderFeliz();
+}
+
+/* ================= SERVICE WORKER (para poder instalarla como app) ================= */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('salud-sw.js').catch(err=>console.error('SW error:', err));
+  });
+}
+
+/* =========================================================================
+   REGLAS DE SEGURIDAD DE FIRESTORE (pégalas en Firebase Console > Firestore
+   Database > Reglas). Restringen la lectura y escritura a los dos correos
+   autorizados, en el servidor, no solo en esta app:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /checkingInWithMyself/sharedJournal {
+      allow read, write: if request.auth != null &&
+        request.auth.token.email in [
+          "claraortega1855@gmail.com",
+          "ramossanchezsantiago2000@gmail.com"
+        ];
+    }
+  }
+}
+   ========================================================================= */
+
+</script>
+</body>
+</html>
+
+{
+  "name": "Checking in with myself",
+  "short_name": "Checking In",
+  "description": "Diario emocional privado — ánimo, pensamientos, ejercicio y calendario.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FBFAF7",
+  "theme_color": "#8FC9A0",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "salud-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "salud-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "salud-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "salud-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
+
+const CACHE_NAME = 'salud-checking-in-with-myself-v1';
+const APP_SHELL = [
+  './',
+  './index.html',
+  './salud-manifest.json',
+  './salud-icon-192.png',
+  './salud-icon-512.png'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  // Deja pasar siempre las peticiones a Firebase/Google (auth y datos en vivo).
+  if (event.request.url.includes('firebase') || event.request.url.includes('google')) return;
+
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      return cached || fetch(event.request).then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return response;
+      }).catch(() => cached);
+    })
+  );
+});
