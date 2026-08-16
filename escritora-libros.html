@@ -155,6 +155,7 @@ body.app-locked .hud, body.app-locked #appWrap{display:none !important;}
   padding:10px 16px; border-radius:10px; box-shadow:var(--shadow);
   opacity:0; transform:translateY(8px); pointer-events:none; transition:opacity .25s ease, transform .25s ease;
 }
+.save-toast.error{background:#c0392b; max-width:320px; line-height:1.4;}
 .save-toast.show{opacity:1; transform:translateY(0);}
 
 /* ============ tabs ============ */
@@ -712,8 +713,17 @@ function cloudSave(){
   if(!currentUser) return;
   clearTimeout(cloudSaveTimer);
   cloudSaveTimer = setTimeout(()=>{
+    const payload = JSON.stringify(state);
+    const sizeBytes = new Blob([payload]).size;
+    if(sizeBytes > 900000){
+      showSaveError('No se ha podido guardar en la nube: hay demasiado contenido (' + Math.round(sizeBytes/1024) + ' KB, el límite son ~1000 KB). Borra alguna foto de personaje o reduce texto e inténtalo de nuevo.');
+      return;
+    }
     suppressNextSnapshot = true;
-    cloudDocRef().set(state).catch(err=>console.error('Error guardando en la nube:', err));
+    cloudDocRef().set(state).catch(err=>{
+      console.error('Error guardando en la nube:', err);
+      showSaveError('No se pudo guardar en la nube: ' + err.message);
+    });
   }, 700);
 }
 
@@ -745,6 +755,19 @@ async function startAppForUser(user){
   }catch(err){
     console.error('No se pudo cargar de la nube, usando copia local:', err);
     state = load();
+  }
+  // Si el cronómetro se quedó marcado como "corriendo" de una sesión anterior
+  // (se cerró la pestaña sin pausarlo antes), lo paramos aquí: no hay ningún
+  // intervalo real contando ese tiempo, así que dejarlo así solo hacía que la
+  // pantalla se congelara en 00:00:00 y el botón quedara al revés. Corregimos
+  // también la nube ANTES de escuchar cambios, para que no nos vuelva a traer
+  // el dato viejo un segundo después.
+  if(state.timer.running){
+    state.timer.running = false;
+    try{
+      suppressNextSnapshot = true;
+      await cloudDocRef().set(state);
+    }catch(err){ console.error('No se pudo corregir el cronómetro en la nube:', err); }
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   document.getElementById('authGate').classList.add('hidden');
@@ -837,9 +860,18 @@ function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); cloud
 let saveToastTimer=null;
 function flashSaveToast(){
   const t = document.getElementById('saveToast');
+  t.classList.remove('error');
+  t.textContent = 'Guardado ✓';
   t.classList.add('show');
   clearTimeout(saveToastTimer);
   saveToastTimer = setTimeout(()=>t.classList.remove('show'), 1400);
+}
+function showSaveError(msg){
+  const t = document.getElementById('saveToast');
+  t.textContent = msg;
+  t.classList.add('show','error');
+  clearTimeout(saveToastTimer);
+  saveToastTimer = setTimeout(()=>t.classList.remove('show','error'), 6000);
 }
 document.getElementById('manualSaveBtn').addEventListener('click', ()=>{ save(); flashSaveToast(); });
 
@@ -1680,11 +1712,31 @@ document.getElementById('avatarFileIn').addEventListener('change', (e)=>{
   const f = e.target.files[0]; if(!f || !avatarEditingChar) return;
   const reader = new FileReader();
   reader.onload = ev=>{
-    avatarEditingChar.avatar = ev.target.result;
-    avatarEditingChar.avatarKind = 'foto';
-    save();
-    avatarModal.classList.remove('show');
-    if(avatarRefreshCb) avatarRefreshCb();
+    // Las fotos se redimensionan y comprimen ANTES de guardarlas: una foto de
+    // móvil sin comprimir puede pesar varios MB, y Firestore solo admite 1 MB
+    // por documento — si se pasa, deja de guardarse TODO el progreso, no solo
+    // la foto. Al reducirla a un cuadrado pequeño y comprimirla, cada foto
+    // ocupa unos pocos KB y no hay riesgo de tocar ese límite.
+    const img = new Image();
+    img.onload = () => {
+      const MAX_DIM = 320;
+      let w = img.width, h = img.height;
+      if(w > h && w > MAX_DIM){ h = Math.round(h * MAX_DIM / w); w = MAX_DIM; }
+      else if(h >= w && h > MAX_DIM){ w = Math.round(w * MAX_DIM / h); h = MAX_DIM; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.72);
+      avatarEditingChar.avatar = compressed;
+      avatarEditingChar.avatarKind = 'foto';
+      save();
+      avatarModal.classList.remove('show');
+      if(avatarRefreshCb) avatarRefreshCb();
+    };
+    img.onerror = () => {
+      showSaveError('No se pudo leer esa imagen. Prueba con otra foto (JPG o PNG).');
+    };
+    img.src = ev.target.result;
   };
   reader.readAsDataURL(f);
   e.target.value='';
